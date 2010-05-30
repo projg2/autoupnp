@@ -1,36 +1,70 @@
 #!/bin/sh
-# AutoUPnP
-# automatically forward ports on open and remove forwardings on close
-# (C) 2009 Michał Górny, 3-clause BSD license
+# AutoUPnP - automatically UPnP-forward ports when they are opened
+# and remove the forwardings as soon as they're closed
+# (C) 2009-2010 Michał Górny <gentoo@mgorny.alt.pl>
+# Released under the terms of the 3-clause BSD license
 
-# Dependencies: netstat, diff, awk, miniupnpc (http://miniupnp.free.fr/)
+# RDEPEND: netstat, diff, awk, miniupnpc (http://miniupnp.free.fr/)
 
-# --config--
+# How to configure:
+# 1) If you're keeping your private copy of this script, you might just
+# adjust the configuration defaults below.
+# 2) On a system-wide install, you'd probably want to set them in
+# '.autoupnp.rc' file in your home directory. You might just copy
+# the 'Default configuration' part below into that file and modify it
+# as needed.
+# 3) You might also change the config options using the environmental
+# variables equal to configuration keys below. Please notice that if
+# you're using 'autoupnp.rc', you need to set them on a similar
+# (default-out) basis as below or else envvars will be overwritten by
+# your 'autoupnp.rc'.
 
-# awk pattern to filter out unwanted listeners
-# e.g. ones bound to local iface
-CONF_FILTER='$4 == "0.0.0.0"'
+[ -f ~/.autoupnp.rc ] && . ~/.autoupnp.rc
 
-# NOTE: below '1' means true and all other values mean false
+# -- Default configuration --
 
-# try to discover UPnP IGD on start to speedup further calls
-# change if it fails to get correct URI
-CONF_DISCOVER=1
+# awk pattern to filter out unwanted listeners, e.g. ones bound to
+# a local interface
+: ${AUPNP_FILTER='$4 == "0.0.0.0"'}
 
-# add already open ports on start
-CONF_START_ADD=1
+# NOTE: below are booleans. 1/y/t/yes/true/on means true, everything
+# else will be interpreted as false.
 
-# remove redirected ports on exit
-CONF_CLEANUP_RM=1
+# Try to discover UPnP IGD on start to speedup further calls.
+# It doesn't work with some gateways, thus you might want to disable it.
+: ${AUPNP_DISCOVER=1}
 
-# --/config--
+# Forward all ports which are already open on start.
+: ${AUPNP_START_ADD=1}
+
+# Remove all redirected ports on exit.
+: ${AUPNP_CLEANUP_RM=1}
+
+# Redirect the output of upnpc calls. By default it is silenced out
+# (upnpc is very verbose) but you might want to set some logfile there
+# or '&1' to get the output on console running AutoUPnP.
+: ${AUPNP_UPNPC_REDIRECT=/dev/null}
+
+# Interval between open port checks (netstat calls), in seconds.
+: ${AUPNP_INTERVAL=3}
+
+# -- /configuration --
 
 MY_PN=autoupnp
-MY_PV=0.2
+MY_PV=0.3
+
+bool() {
+	case "$1" in
+		1|[yY]|[tT]|[yY][eE][sS]|[tT][rR][uU][eE]|[oO][nN])
+			return 0;;
+		*)
+			return 1;;
+	esac
+}
 
 get_tempfile() {
 	if ! mktemp 2>/dev/null; then
-		local tmpfn
+		local tmpfn 2>/dev/null
 		tmpfn="/tmp/tmp.${MY_PN}.$$.$1"
 		touch "${tmpfn}"
 		echo "${tmpfn}"
@@ -65,7 +99,7 @@ find_upnp() {
 parse_output() {
 	awk '
 		BEGIN { FS = "[ \t:]+" }
-		($1 == "tcp" || $1 == "udp") && ('"${CONF_FILTER}"') { print $5 " " $1 }
+		($1 == "tcp" || $1 == "udp") && ('"${AUPNP_FILTER}"') { print $5 " " $1 }
 	'
 }
 
@@ -88,44 +122,46 @@ parse_changes() {
 				commands[i] = "-r" commands[i]
 
 			for (i in commands) {
-				if (commands[i])
-					system("upnpc '"${UPNPC_OPTS}"' " commands[i])
+				if (commands[i]) {
+					print("$ upnpc '"${AUPNP_UPNPC_OPTS}"' " commands[i])
+					system("upnpc '"${AUPNP_UPNPC_OPTS}"' " commands[i] ">'${AUPNP_UPNPC_REDIRECT}'")
+				}
 			}
 		}
 	'
 }
 
 check_changes() {
-	diff "${TMPF1}" "${TMPF2}" | parse_changes
-	cp -f "${TMPF2}" "${TMPF1}" # avoid removing temporary file
+	diff "${AUPNP_TMPF1}" "${AUPNP_TMPF2}" | parse_changes
+	cp -f "${AUPNP_TMPF2}" "${AUPNP_TMPF1}" # avoid removing temporary file
 }
 
 cleanup() {
-	if [ ${CONF_CLEANUP_RM} -eq 1 ]; then
-		printf '' > "${TMPF2}"
+	if bool ${AUPNP_CLEANUP_RM}; then
+		printf '' > "${AUPNP_TMPF2}"
 		check_changes
 	fi
-	rm -f "${TMPF1}" "${TMPF2}"
+	rm -f "${AUPNP_TMPF1}" "${AUPNP_TMPF2}"
 	exit 0
 }
 
 main() {
-	TMPF1="$(get_tempfile 1)"
-	TMPF2="$(get_tempfile 2)"
+	AUPNP_TMPF1="$(get_tempfile 1)"
+	AUPNP_TMPF2="$(get_tempfile 2)"
 
-	if [ ! -w "${TMPF1}" -o ! -w "${TMPF2}" ]; then
+	if [ ! -w "${AUPNP_TMPF1}" -o ! -w "${AUPNP_TMPF2}" ]; then
 		echo 'Unable to create temporary files.' >&2
 		exit 1
 	fi
 
-	[ ${CONF_DISCOVER} -eq 1 ] && UPNPC_OPTS="$(find_upnp)"
+	bool ${AUPNP_DISCOVER} && AUPNP_UPNPC_OPTS="$(find_upnp)"
 
-	netstat -nl4 2>/dev/null | parse_output > "${TMPF2}"
-	[ ${CONF_START_ADD} -eq 1 ] || cp "${TMPF2}" "${TMPF1}"
+	netstat -nl4 2>/dev/null | parse_output > "${AUPNP_TMPF2}"
+	bool ${AUPNP_START_ADD} || cp "${AUPNP_TMPF2}" "${AUPNP_TMPF1}"
 	while true; do
 		check_changes
-		sleep 3
-		netstat -nl4 2>/dev/null | parse_output > "${TMPF2}"
+		sleep ${AUPNP_INTERVAL}
+		netstat -nl4 2>/dev/null | parse_output > "${AUPNP_TMPF2}"
 	done
 }
 
