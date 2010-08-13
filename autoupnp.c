@@ -9,6 +9,7 @@
 
 #include <sys/socket.h>
 #include <unistd.h>
+#include <netinet/ip.h>
 
 #include "registry.h"
 
@@ -52,12 +53,26 @@ static void* const get_func(const enum replaced_func rf) {
 	return funcs[rf];
 }
 
-int socket(const int domain, const int type, const int protocol) {
+int socket(const int domain, const int type, int protocol) {
 	const int (*socket_func)(int, int, int) = get_func(rf_socket);
 	int fd;
 
 	fd = socket_func(domain, type, protocol);
-	registry_add(fd);
+	/* valid IPv4 socket, either TCP or UDP */
+	if (fd != -1 && domain == AF_INET) {
+		if (!protocol) {
+			/* For internal use, socket_func() already called */
+			if (type == SOCK_STREAM)
+				protocol = IPPROTO_TCP;
+			else if (type == SOCK_DGRAM)
+				protocol = IPPROTO_UDP;
+		}
+
+		if (protocol == IPPROTO_TCP)
+			registry_add(fd, "tcp");
+		else if (protocol == IPPROTO_UDP)
+			registry_add(fd, "udp");
+	}
 	return fd;
 }
 

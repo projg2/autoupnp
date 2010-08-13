@@ -8,6 +8,7 @@
 
 struct registered_socket {
 	int fd;
+	const char* protocol;
 	/* XXX: sockaddr etc. */
 
 	struct registered_socket* next;
@@ -15,13 +16,14 @@ struct registered_socket {
 
 static struct registered_socket* socket_registry = NULL;
 
-void registry_add(const int fildes) {
+void registry_add(const int fildes, const char* const protocol) {
 	struct registered_socket* new_socket = malloc(sizeof(*new_socket));
 
 	if (!new_socket)
 		return;
 
 	new_socket->fd = fildes;
+	new_socket->protocol = protocol;
 	new_socket->next = socket_registry;
 	socket_registry = new_socket;
 }
