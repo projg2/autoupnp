@@ -1,3 +1,6 @@
+#ifndef AUTOUPNP_REGISTRY_H
+#define AUTOUPNP_REGISTRY_H
+
 #include <netinet/in.h>
 
 enum registered_socket_state {
@@ -17,3 +20,5 @@ void registry_add(int fildes, const char* protocol);
 void registry_remove(int fildes);
 
 struct registered_socket_data* registry_find(int fildes);
+
+#endif

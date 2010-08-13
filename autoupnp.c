@@ -8,7 +8,6 @@
 #include <string.h>
 #include <errno.h>
 #include <dlfcn.h>
-#include <syslog.h>
 
 #include <sys/socket.h>
 #include <unistd.h>
@@ -16,6 +15,7 @@
 #include <netinet/ip.h>
 
 #include "registry.h"
+#include "upnp.h"
 
 enum replaced_func {
 	rf_socket,
@@ -55,14 +55,6 @@ static void* const get_func(const enum replaced_func rf) {
 	}
 
 	return funcs[rf];
-}
-
-static void enable_redirect(struct registered_socket_data* rs) {
-	syslog(LOG_INFO, "(AutoUPNP) Enabling the redirect for port %s", rs->port);
-}
-
-static void disable_redirect(struct registered_socket_data* rs) {
-	syslog(LOG_INFO, "(AutoUPNP) Disabling the redirect for port %s", rs->port);
 }
 
 int socket(const int domain, const int type, int protocol) {

@@ -1,5 +1,5 @@
 LIB = autoupnp.so
-OBJS = autoupnp.o registry.o
+OBJS = autoupnp.o registry.o upnp.o
 
 LCFLAGS = -fPIC
 LLIBS = -ldl
