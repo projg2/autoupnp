@@ -9,12 +9,7 @@ enum registered_socket_state {
 
 struct registered_socket_data {
 	const char* protocol;
-
-	union {
-		struct sockaddr_in as_sin;
-		char* as_str;
-	} addr;
-
+	char port[6];
 	short int state;
 };
 

@@ -4,12 +4,14 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <dlfcn.h>
 
 #include <sys/socket.h>
 #include <unistd.h>
+#include <netinet/in.h>
 #include <netinet/ip.h>
 
 #include "registry.h"
@@ -93,7 +95,9 @@ int bind(const int socket, const struct sockaddr* const address,
 		struct registered_socket_data* rs = registry_find(socket);
 
 		if (rs) {
-			memcpy(&(rs->addr.as_sin), address, address_len);
+			const struct sockaddr_in* sin = (void*) address;
+
+			snprintf(rs->port, sizeof(rs->port), "%d", ntohs(sin->sin_port));
 			rs->state |= RS_BOUND;
 			if (rs->state == RS_WORKING)
 				enable_redirect(rs);
