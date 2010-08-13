@@ -97,8 +97,17 @@ int bind(const int socket, const struct sockaddr* const address,
 
 int listen(const int socket, const int backlog) {
 	const int (*listen_func)(int, int) = get_func(rf_listen);
+	int ret = listen_func(socket, backlog);
 
-	return listen_func(socket, backlog);
+	if (ret != -1) {
+		struct registered_socket_data* rs = registry_find(socket);
+
+		if (rs) {
+			rs->state |= RS_LISTENING;
+		}
+	}
+
+	return ret;
 }
 
 int close(const int fildes) {
