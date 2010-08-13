@@ -9,6 +9,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include "registry.h"
+
 enum replaced_func {
 	rf_socket,
 	rf_bind,
@@ -40,8 +42,11 @@ static void* const get_func(const enum replaced_func rf) {
 
 int socket(const int domain, const int type, const int protocol) {
 	const int (*socket_func)(int, int, int) = get_func(rf_socket);
+	int fd;
 
-	return socket_func(domain, type, protocol);
+	fd = socket_func(domain, type, protocol);
+	registry_add(fd);
+	return fd;
 }
 
 int bind(const int socket, const struct sockaddr* const address,
@@ -60,6 +65,8 @@ int listen(const int socket, const int backlog) {
 
 int close(const int fildes) {
 	const int (*close_func)(int) = get_func(rf_close);
+
+	registry_remove(fildes);
 
 	return close_func(fildes);
 }
