@@ -97,10 +97,13 @@ int bind(const int socket, const struct sockaddr* const address,
 		if (rs) {
 			const struct sockaddr_in* sin = (void*) address;
 
-			snprintf(rs->port, sizeof(rs->port), "%d", ntohs(sin->sin_port));
-			rs->state |= RS_BOUND;
-			if (rs->state == RS_WORKING)
-				enable_redirect(rs);
+			/* IPv4 check again, and require being bound on all interfaces */
+			if (sin->sin_family == AF_INET && sin->sin_addr.s_addr == INADDR_ANY) {
+				snprintf(rs->port, sizeof(rs->port), "%d", ntohs(sin->sin_port));
+				rs->state |= RS_BOUND;
+				if (rs->state == RS_WORKING)
+					enable_redirect(rs);
+			}
 		}
 	}
 
