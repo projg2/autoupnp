@@ -4,6 +4,7 @@
  */
 
 #include <stdlib.h>
+#include <errno.h>
 #include <dlfcn.h>
 
 #include <sys/socket.h>
@@ -20,6 +21,13 @@ enum replaced_func {
 	rf_last
 };
 
+static void xchg_errno(void) {
+	static int saved_errno = 0;
+	const int tmp = errno;
+	errno = saved_errno;
+	saved_errno = tmp;
+}
+
 static void* const get_func(const enum replaced_func rf) {
 	static void* libc_handle = NULL;
 	static void* funcs[rf_last];
@@ -29,12 +37,16 @@ static void* const get_func(const enum replaced_func rf) {
 			{ "socket", "bind", "listen", "close" };
 		int i;
 
+		xchg_errno();
+
 		libc_handle = dlopen("libc.so.6", RTLD_LAZY);
 		if (!libc_handle)
 			return NULL;
 
 		for (i = 0; i < rf_last; i++)
 			funcs[i] = dlsym(libc_handle, replaced_func_names[i]);
+
+		xchg_errno();
 	}
 
 	return funcs[rf];
