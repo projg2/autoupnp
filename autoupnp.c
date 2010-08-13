@@ -10,7 +10,8 @@
 #include <unistd.h>
 
 enum replaced_func {
-	rf_bind = 0,
+	rf_socket,
+	rf_bind,
 	rf_listen,
 	rf_close,
 
@@ -23,7 +24,7 @@ static void* const get_func(const enum replaced_func rf) {
 
 	if (!libc_handle) {
 		const char* const replaced_func_names[rf_last] =
-			{ "bind", "listen", "close" };
+			{ "socket", "bind", "listen", "close" };
 		int i;
 
 		libc_handle = dlopen("libc.so.6", RTLD_LAZY);
@@ -35,6 +36,12 @@ static void* const get_func(const enum replaced_func rf) {
 	}
 
 	return funcs[rf];
+}
+
+int socket(const int domain, const int type, const int protocol) {
+	const int (*socket_func)(int, int, int) = get_func(rf_socket);
+
+	return socket_func(domain, type, protocol);
 }
 
 int bind(const int socket, const struct sockaddr* const address,
