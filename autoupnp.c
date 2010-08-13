@@ -54,6 +54,12 @@ static void* const get_func(const enum replaced_func rf) {
 	return funcs[rf];
 }
 
+static void enable_redirect(struct registered_socket_data* rs) {
+}
+
+static void disable_redirect(struct registered_socket_data* rs) {
+}
+
 int socket(const int domain, const int type, int protocol) {
 	const int (*socket_func)(int, int, int) = get_func(rf_socket);
 	int fd;
@@ -89,6 +95,8 @@ int bind(const int socket, const struct sockaddr* const address,
 		if (rs) {
 			memcpy(&(rs->addr.as_sin), address, address_len);
 			rs->state |= RS_BOUND;
+			if (rs->state == RS_WORKING)
+				enable_redirect(rs);
 		}
 	}
 
@@ -104,6 +112,8 @@ int listen(const int socket, const int backlog) {
 
 		if (rs) {
 			rs->state |= RS_LISTENING;
+			if (rs->state == RS_WORKING)
+				enable_redirect(rs);
 		}
 	}
 
@@ -112,8 +122,13 @@ int listen(const int socket, const int backlog) {
 
 int close(const int fildes) {
 	const int (*close_func)(int) = get_func(rf_close);
+	struct registered_socket_data* rs = registry_find(fildes);
 
-	registry_remove(fildes);
+	if (rs) {
+		if (rs->state == RS_WORKING)
+			disable_redirect(rs);
+		registry_remove(fildes);
+	}
 
 	return close_func(fildes);
 }
