@@ -6,11 +6,11 @@
 
 #include <stdlib.h>
 
+#include "registry.h"
+
 struct registered_socket {
 	int fd;
-	const char* protocol;
-	/* XXX: sockaddr etc. */
-
+	struct registered_socket_data data;
 	struct registered_socket* next;
 };
 
@@ -23,7 +23,8 @@ void registry_add(const int fildes, const char* const protocol) {
 		return;
 
 	new_socket->fd = fildes;
-	new_socket->protocol = protocol;
+	new_socket->data.protocol = protocol;
+	new_socket->data.state = RS_NONE;
 	new_socket->next = socket_registry;
 	socket_registry = new_socket;
 }
@@ -41,4 +42,15 @@ void registry_remove(const int fildes) {
 			return;
 		}
 	}
+}
+
+struct registered_socket_data* registry_find(const int fildes) {
+	struct registered_socket *i;
+
+	for (i = socket_registry; i; i = i->next) {
+		if (i->fd == fildes)
+			return &(i->data);
+	}
+
+	return NULL;
 }

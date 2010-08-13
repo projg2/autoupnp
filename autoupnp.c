@@ -4,6 +4,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <dlfcn.h>
 
@@ -80,8 +81,18 @@ int bind(const int socket, const struct sockaddr* const address,
 		const socklen_t address_len) {
 	const int (*bind_func)(int, const struct sockaddr*, socklen_t) =
 		get_func(rf_bind);
+	const int ret = bind_func(socket, address, address_len);
 
-	return bind_func(socket, address, address_len);
+	if (ret != -1 && address_len == sizeof(struct sockaddr_in)) {
+		struct registered_socket_data* rs = registry_find(socket);
+
+		if (rs) {
+			memcpy(&(rs->addr.as_sin), address, address_len);
+			rs->state |= RS_BOUND;
+		}
+	}
+
+	return ret;
 }
 
 int listen(const int socket, const int backlog) {
