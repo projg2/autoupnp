@@ -126,6 +126,13 @@ int bind(const int socket, const struct sockaddr* const address,
 }
 
 static void exit_handler(void) {
+	struct registered_socket_data* i;
+
+	while ((i = registry_yield())) {
+		if (i->state == RS_WORKING)
+			disable_redirect(i);
+	}
+
 	dispose_igd();
 }
 

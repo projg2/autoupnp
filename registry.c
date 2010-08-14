@@ -45,7 +45,7 @@ void registry_remove(const int fildes) {
 }
 
 struct registered_socket_data* registry_find(const int fildes) {
-	struct registered_socket *i;
+	struct registered_socket* i;
 
 	for (i = socket_registry; i; i = i->next) {
 		if (i->fd == fildes)
@@ -53,4 +53,26 @@ struct registered_socket_data* registry_find(const int fildes) {
 	}
 
 	return NULL;
+}
+
+struct registered_socket_data* registry_yield(void) {
+	static struct registered_socket* i;
+	static int iteration_done = 1;
+	struct registered_socket* ret;
+
+	if (iteration_done) {
+		i = socket_registry;
+		iteration_done = 0;
+	}
+
+	ret = i;
+	if (i)
+		i = i->next;
+	else
+		iteration_done = 1;
+
+	if (ret)
+		return &(ret->data);
+	else
+		return NULL;
 }

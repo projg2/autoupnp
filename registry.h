@@ -20,5 +20,6 @@ void registry_add(int fildes, const char* protocol);
 void registry_remove(int fildes);
 
 struct registered_socket_data* registry_find(int fildes);
+struct registered_socket_data* registry_yield(void);
 
 #endif
