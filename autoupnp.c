@@ -57,26 +57,36 @@ static void* const get_func(const enum replaced_func rf) {
 	return funcs[rf];
 }
 
-int socket(const int domain, const int type, int protocol) {
-	const int (*socket_func)(int, int, int) = get_func(rf_socket);
-	int fd;
+static const char* const getproto(const int type, const int protocol) {
+	if (!protocol) {
+		if (type == SOCK_STREAM)
+			return "tcp";
+		if (type == SOCK_DGRAM)
+			return "udp";
 
-	fd = socket_func(domain, type, protocol);
+		return NULL;
+	}
+
+	if (protocol == IPPROTO_TCP)
+		return "tcp";
+	if (protocol == IPPROTO_UDP)
+		return "udp";
+
+	return NULL;
+}
+
+int socket(const int domain, const int type, const int protocol) {
+	const int (*socket_func)(int, int, int) = get_func(rf_socket);
+	int fd = socket_func(domain, type, protocol);
+
 	/* valid IPv4 socket, either TCP or UDP */
 	if (fd != -1 && domain == AF_INET) {
-		if (!protocol) {
-			/* For internal use, socket_func() already called */
-			if (type == SOCK_STREAM)
-				protocol = IPPROTO_TCP;
-			else if (type == SOCK_DGRAM)
-				protocol = IPPROTO_UDP;
-		}
+		const char* const proto = getproto(type, protocol);
 
-		if (protocol == IPPROTO_TCP)
-			registry_add(fd, "tcp");
-		else if (protocol == IPPROTO_UDP)
-			registry_add(fd, "udp");
+		if (proto)
+			registry_add(fd, proto);
 	}
+
 	return fd;
 }
 
