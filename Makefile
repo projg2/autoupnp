@@ -6,7 +6,11 @@ WANT_LIBNOTIFY = true
 LCFLAGS = -fPIC $$($(WANT_LIBNOTIFY) && pkg-config --cflags libnotify && printf '%s' '-DHAVE_LIBNOTIFY')
 LLIBS = -ldl -lminiupnpc $$($(WANT_LIBNOTIFY) && pkg-config --libs libnotify)
 
-all: $(LIB)
+all:
+	+make $(MAKEFLAGS) \
+		LCFLAGS="$$(echo $(LCFLAGS))" \
+		LLIBS="$$(echo $(LLIBS))" \
+		$(LIB)
 
 $(LIB): $(OBJS)
 	$(CC) -shared $(LDFLAGS) $(OBJS) $(LLIBS) -o $@
