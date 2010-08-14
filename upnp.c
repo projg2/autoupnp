@@ -43,6 +43,8 @@ static struct igd_data* setup_igd(void) {
 	return NULL;
 }
 
+#pragma GCC visibility push(hidden)
+
 void dispose_igd(void) {
 	struct igd_data* igd_data = setup_igd();
 	FreeUPNPUrls(&(igd_data->urls));
@@ -91,3 +93,5 @@ int disable_redirect(struct registered_socket_data* rs) {
 	} else
 		return -1;
 }
+
+#pragma GCC visibility pop

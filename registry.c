@@ -8,6 +8,8 @@
 
 #include "registry.h"
 
+#pragma GCC visibility push(hidden)
+
 struct registered_socket {
 	int fd;
 	struct registered_socket_data data;
@@ -76,3 +78,5 @@ struct registered_socket_data* registry_yield(void) {
 	else
 		return NULL;
 }
+
+#pragma GCC visibility pop
