@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 
+#include "notify.h"
 #include "registry.h"
 #include "upnp.h"
 
@@ -148,6 +149,7 @@ static void exit_handler(void) {
 	}
 
 	dispose_igd();
+	dispose_notify();
 }
 
 int listen(const int socket, const int backlog) {

@@ -6,6 +6,8 @@ enum notify_type {
 	notify_error
 };
 
+void dispose_notify(void);
+
 void user_notify(enum notify_type type, const char* const format, ...);
 
 #endif

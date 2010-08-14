@@ -1,8 +1,8 @@
 LIB = autoupnp.so
 OBJS = autoupnp.o notify.o registry.o upnp.o
 
-LCFLAGS = -fPIC
-LLIBS = -ldl -lminiupnpc
+LCFLAGS = -fPIC $$(pkg-config --cflags libnotify && printf '%s' '-DHAVE_LIBNOTIFY')
+LLIBS = -ldl -lminiupnpc $$(pkg-config --libs libnotify)
 
 all: $(LIB)
 
