@@ -125,7 +125,12 @@ int bind(const int socket, const struct sockaddr* const address,
 	return ret;
 }
 
+static void exit_handler(void) {
+	dispose_igd();
+}
+
 int listen(const int socket, const int backlog) {
+	static int exit_hook_set_up = 0;
 	const int (*listen_func)(int, int) = get_func(rf_listen);
 	int ret = listen_func(socket, backlog);
 
@@ -134,8 +139,12 @@ int listen(const int socket, const int backlog) {
 
 		if (rs) {
 			rs->state |= RS_LISTENING;
-			if (rs->state == RS_WORKING)
-				enable_redirect(rs);
+			if (rs->state == RS_WORKING) {
+				if (enable_redirect(rs) != -1 && !exit_hook_set_up) {
+					atexit(&exit_handler);
+					exit_hook_set_up++;
+				}
+			}
 		}
 	}
 

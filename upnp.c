@@ -22,10 +22,9 @@ struct igd_data {
 	char lan_addr[16];
 };
 
-static int igd_set_up = 0;
-
 static struct igd_data* setup_igd(void) {
 	static struct igd_data igd_data;
+	static int igd_set_up = 0;
 
 	if (!igd_set_up) {
 		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0);
@@ -44,14 +43,12 @@ static struct igd_data* setup_igd(void) {
 	return NULL;
 }
 
-static void dispose_igd(void) {
-	if (igd_set_up) {
-		struct igd_data* igd_data = setup_igd();
-		FreeUPNPUrls(&(igd_data->urls));
-	}
+void dispose_igd(void) {
+	struct igd_data* igd_data = setup_igd();
+	FreeUPNPUrls(&(igd_data->urls));
 }
 
-void enable_redirect(struct registered_socket_data* rs) {
+int enable_redirect(struct registered_socket_data* rs) {
 	const struct igd_data* igd_data = setup_igd();
 
 	if (igd_data) {
@@ -68,10 +65,13 @@ void enable_redirect(struct registered_socket_data* rs) {
 		else
 			syslog(LOG_ERR, "(AutoUPNP) UPNP_AddPortMapping(%s, %s, %s) failed: %d (%s).",
 					rs->port, igd_data->lan_addr, rs->protocol, ret, strupnperror(ret));
-	}
+
+		return ret;
+	} else
+		return -1;
 }
 
-void disable_redirect(struct registered_socket_data* rs) {
+int disable_redirect(struct registered_socket_data* rs) {
 	const struct igd_data* igd_data = setup_igd();
 
 	if (igd_data) {
@@ -86,5 +86,8 @@ void disable_redirect(struct registered_socket_data* rs) {
 		else
 			syslog(LOG_ERR, "(AutoUPNP) UPNP_DeletePortMapping(%s, %s) failed: %d (%s).",
 					rs->port, rs->protocol, ret, strupnperror(ret));
-	}
+
+		return ret;
+	} else
+		return -1;
 }
