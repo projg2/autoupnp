@@ -12,7 +12,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <netinet/in.h>
-#include <netinet/ip.h>
 
 #include "registry.h"
 #include "upnp.h"
@@ -77,10 +76,15 @@ static const char* const getproto(const int type, const int protocol) {
 		return NULL;
 	}
 
+	/* These shall be defined as macros, POSIX states */
+#ifdef IPPROTO_TCP
 	if (protocol == IPPROTO_TCP)
 		return "tcp";
+#endif
+#ifdef IPPROTO_UDP
 	if (protocol == IPPROTO_UDP)
 		return "udp";
+#endif
 
 	return NULL;
 }
