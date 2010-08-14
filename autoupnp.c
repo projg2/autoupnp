@@ -43,7 +43,12 @@ static void* const get_func(const enum replaced_func rf) {
 
 		xchg_errno();
 
-		libc_handle = dlopen("libc.so.6", RTLD_LAZY);
+		libc_handle = dlopen("libc.so", RTLD_LAZY);
+		for (i = 0; !libc_handle && i < 10; i++) {
+			char libc_name[10];
+			snprintf(libc_name, sizeof(libc_name), "libc.so.%d", i);
+			libc_handle = dlopen(libc_name, RTLD_LAZY);
+		}
 		if (!libc_handle) {
 			fprintf(stderr, "(AutoUPnP) Unable to dlopen() the libc: %s\n", dlerror());
 			exit(EXIT_FAILURE);
