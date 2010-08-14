@@ -1,0 +1,37 @@
+How to build
+------------
+
+AutoUPnP uses a simple Makefile for the build procedure. In order
+to build the library, call:
+$ make
+
+The following environment variables are respected by the Makefile:
+
+* CC (the compiler executable)
+* CFLAGS (the compiler flags used for compiling)
+* LDFLAGS (the compiler flags used for linking)
+
+
+Dependencies
+------------
+
+The only obligatory requirement is a POSIX-compatible standard C library
+implementation (or at least one providing POSIX sockets, dl*() family
+of functions, syslog() and snprintf() [C99]).
+
+If available, AutoUPnP will use IPPROTO_* constants and GNU RTLD_NEXT
+dlsym() extension.
+
+Additionally, AutoUPnP can use libnotify if it's available via
+pkg-config. If you want to disable it, you need to override the
+WANT_LIBNOTIFY macro:
+$ make WANT_LIBNOTIFY=false
+
+
+How to install
+--------------
+
+Simply copy (or move) the 'autoupnp.so' library into a libdir of your
+choice. Then add the LD_PRELOAD (re)definition wherever you want to use
+it -- either in one of the profile files, application startup scripts,
+.desktop definitions...
