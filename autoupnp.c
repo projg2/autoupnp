@@ -3,6 +3,7 @@
  * Distributed under the terms of the 3-clause BSD license
  */
 
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -43,6 +44,9 @@ static void* const get_func(const enum replaced_func rf) {
 
 		xchg_errno();
 
+#ifdef RTLD_NEXT
+		libc_handle = RTLD_NEXT;
+#else
 		libc_handle = dlopen("libc.so", RTLD_LAZY);
 		for (i = 0; !libc_handle && i < 10; i++) {
 			char libc_name[10];
@@ -53,6 +57,7 @@ static void* const get_func(const enum replaced_func rf) {
 			fprintf(stderr, "(AutoUPnP) Unable to dlopen() the libc: %s\n", dlerror());
 			exit(EXIT_FAILURE);
 		}
+#endif
 
 		for (i = 0; i < rf_last; i++) {
 			funcs[i] = dlsym(libc_handle, replaced_func_names[i]);
