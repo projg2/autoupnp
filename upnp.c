@@ -5,13 +5,13 @@
  */
 
 #include <stdlib.h>
-#include <syslog.h>
 
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
 
 #include "upnp.h"
+#include "notify.h"
 
 static const int discovery_delay = 2000; /* [ms] */
 
@@ -33,7 +33,7 @@ static struct igd_data* setup_igd(void) {
 					igd_data.lan_addr, sizeof(igd_data.lan_addr)))
 			igd_set_up = 1;
 		else
-			syslog(LOG_ERR, "(AutoUPNP) Unable to find an IGD on the network.");
+			user_notify(notify_error, "(AutoUPNP) Unable to find an IGD on the network.");
 
 		freeUPNPDevlist(devlist);
 	}
@@ -68,13 +68,13 @@ int enable_redirect(struct registered_socket_data* rs) {
 					igd_data->urls.controlURL,
 					igd_data->data.servicetype,
 					extip))
-				syslog(LOG_INFO, "(AutoUPNP) %s:%s (%s) forwarded successfully to %s:%s.",
+				user_notify(notify_info, "(AutoUPNP) %s:%s (%s) forwarded successfully to %s:%s.",
 						extip, rs->port, rs->protocol, igd_data->lan_addr, rs->port);
 			else
-				syslog(LOG_INFO, "(AutoUPNP) Port %s (%s) forwarded successfully to %s:%s.",
+				user_notify(notify_info, "(AutoUPNP) Port %s (%s) forwarded successfully to %s:%s.",
 						rs->port, rs->protocol, igd_data->lan_addr, rs->port);
 		} else
-			syslog(LOG_ERR, "(AutoUPNP) UPNP_AddPortMapping(%s, %s, %s) failed: %d (%s).",
+			user_notify(notify_error, "(AutoUPNP) UPNP_AddPortMapping(%s, %s, %s) failed: %d (%s).",
 					rs->port, igd_data->lan_addr, rs->protocol, ret, strupnperror(ret));
 
 		return ret;
@@ -92,10 +92,10 @@ int disable_redirect(struct registered_socket_data* rs) {
 				rs->port, rs->protocol, NULL);
 
 		if (ret == 0)
-			syslog(LOG_INFO, "(AutoUPNP) Port forwarding for port %s (%s) removed successfully.",
+			user_notify(notify_info, "(AutoUPNP) Port forwarding for port %s (%s) removed successfully.",
 					rs->port, rs->protocol);
 		else
-			syslog(LOG_ERR, "(AutoUPNP) UPNP_DeletePortMapping(%s, %s) failed: %d (%s).",
+			user_notify(notify_error, "(AutoUPNP) UPNP_DeletePortMapping(%s, %s) failed: %d (%s).",
 					rs->port, rs->protocol, ret, strupnperror(ret));
 
 		return ret;
