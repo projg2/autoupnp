@@ -61,10 +61,19 @@ int enable_redirect(struct registered_socket_data* rs) {
 				"AutoUPNP-added port forwarding",
 				rs->protocol, NULL);
 
-		if (ret == 0)
-			syslog(LOG_INFO, "(AutoUPNP) Port %s/%s forwarded successfully to %s.",
-					rs->port, rs->protocol, igd_data->lan_addr);
-		else
+		if (ret == 0) {
+			char extip[16];
+
+			if (!UPNP_GetExternalIPAddress(
+					igd_data->urls.controlURL,
+					igd_data->data.servicetype,
+					extip))
+				syslog(LOG_INFO, "(AutoUPNP) %s:%s (%s) forwarded successfully to %s:%s.",
+						extip, rs->port, rs->protocol, igd_data->lan_addr, rs->port);
+			else
+				syslog(LOG_INFO, "(AutoUPNP) Port %s (%s) forwarded successfully to %s:%s.",
+						rs->port, rs->protocol, igd_data->lan_addr, rs->port);
+		} else
 			syslog(LOG_ERR, "(AutoUPNP) UPNP_AddPortMapping(%s, %s, %s) failed: %d (%s).",
 					rs->port, igd_data->lan_addr, rs->protocol, ret, strupnperror(ret));
 
@@ -83,7 +92,7 @@ int disable_redirect(struct registered_socket_data* rs) {
 				rs->port, rs->protocol, NULL);
 
 		if (ret == 0)
-			syslog(LOG_INFO, "(AutoUPNP) Port forwarding for port %s/%s removed successfully.",
+			syslog(LOG_INFO, "(AutoUPNP) Port forwarding for port %s (%s) removed successfully.",
 					rs->port, rs->protocol);
 		else
 			syslog(LOG_ERR, "(AutoUPNP) UPNP_DeletePortMapping(%s, %s) failed: %d (%s).",
