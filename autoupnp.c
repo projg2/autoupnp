@@ -40,16 +40,26 @@ static void* const get_func(const enum replaced_func rf) {
 	if (!libc_handle) {
 		const char* const replaced_func_names[rf_last] =
 			{ "socket", "bind", "listen", "close" };
-		int i;
+		int i, failure = 0;
 
 		xchg_errno();
 
 		libc_handle = dlopen("libc.so.6", RTLD_LAZY);
-		if (!libc_handle)
-			return NULL;
+		if (!libc_handle) {
+			fprintf(stderr, "(AutoUPnP) Unable to dlopen() the libc: %s\n", dlerror());
+			exit(EXIT_FAILURE);
+		}
 
-		for (i = 0; i < rf_last; i++)
+		for (i = 0; i < rf_last; i++) {
 			funcs[i] = dlsym(libc_handle, replaced_func_names[i]);
+			if (!funcs[i]) {
+				fprintf(stderr, "(AutoUPnP) Unable to dlsym(%s): %s\n",
+						replaced_func_names[i], dlerror());
+				failure++;
+			}
+		}
+		if (failure)
+			exit(EXIT_FAILURE);
 
 		xchg_errno();
 	}
