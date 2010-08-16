@@ -47,10 +47,13 @@ Please take a look at the 'INSTALL' doc.
 How to use
 ----------
 
-In order to use AutoUPnP-0.4, you need to add it to your LD_PRELOAD
-variable, i.e.:
-$ export LD_PRELOAD="${LD_PRELOAD} libautoupnp.so"
-$ myapp
+AutoUPnP 0.4 is supposed to be used via ld.so's LD_PRELOAD mechanism. In
+order to have the library preloaded, you'll probably want to use
+the 'autoupnp' wrapper script. Call:
+
+$ autoupnp --help
+
+to take a short guide of the script.
 
 
 Bugs

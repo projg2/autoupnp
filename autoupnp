@@ -1,0 +1,63 @@
+#!/bin/sh
+# AutoUPnP LD_PRELOAD setup helper
+# (c) 2010 Michał Górny
+# Released under the terms of the 3-clause BSD license
+
+print_help() {
+	cat <<_EOF_
+Usage:
+
+autoupnp
+	to execute subshell with AutoUPnP LD_PRELOAD enabled.
+autoupnp <command> [...]
+	to execute the command with AutoUPnP LD_PRELOAD enabled.
+. autoupnp on
+	to export AutoUPnP LD_PRELOAD to the currently running shell.
+. autoupnp off
+	to remove AutoUPnP from LD_PRELOAD in the currently running shell.
+_EOF_
+}
+
+enable_preload() {
+	set -- ${LD_PRELOAD}
+	while [ ${#} -gt 0 ]; do
+		[ ${1} = 'autoupnp.so' ] && return
+		shift
+	done
+
+	LD_PRELOAD=${LD_PRELOAD+${LD_PRELOAD} }autoupnp.so
+	export LD_PRELOAD
+}
+
+disable_preload() {
+	set -- ${LD_PRELOAD}
+
+	LD_PRELOAD=
+	while [ ${#} -gt 0 ]; do
+		[ ${1} != 'autoupnp.so' ] \
+				&& LD_PRELOAD=${LD_PRELOAD+${LD_PRELOAD} }${1}
+		shift
+	done
+	export LD_PRELOAD
+}
+
+if [ ${#} -gt 0 ]; then
+	case "${1}" in
+		-h|-?|--help)
+			print_help
+			;;
+		on)
+			enable_preload
+			;;
+		off)
+			disable_preload
+			;;
+		*)
+			enable_preload
+			exec "$@"
+	esac
+else
+	echo 'Starting AutoUPnP-enabled shell.' >&2
+	enable_preload
+	exec "${SHELL:-/bin/sh}"
+fi

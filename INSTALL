@@ -32,6 +32,12 @@ How to install
 --------------
 
 Simply copy (or move) the 'autoupnp.so' library into a libdir of your
-choice. Then add the LD_PRELOAD (re)definition wherever you want to use
-it -- either in one of the profile files, application startup scripts,
-.desktop definitions...
+choice. If you like, you may copy 'autoupnp' wrapper script to a bindir
+too.
+
+If you want to have AutoUPnP enabled by default, you'd probably like to
+add:
+	. autoupnp on
+into your ~/.bash_profile, ~/.profile, /etc/profile or a similar file
+of your choice. It is important to source the script as it needs to
+export the LD_PRELOAD var to the current environment.
