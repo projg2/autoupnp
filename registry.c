@@ -23,18 +23,18 @@ struct registered_socket {
 
 static struct registered_socket* socket_registry = NULL;
 
-void registry_add(const int fildes, const char* const protocol) {
+struct registered_socket_data* registry_add(const int fildes) {
 	struct registered_socket* new_socket = malloc(sizeof(*new_socket));
 
 	if (!new_socket)
-		return;
+		return NULL;
 
 	new_socket->fd = fildes;
 	new_socket->pid = getpid();
-	new_socket->data.protocol = protocol;
-	new_socket->data.state = RS_NONE;
 	new_socket->next = socket_registry;
 	socket_registry = new_socket;
+
+	return &(new_socket->data);
 }
 
 void registry_remove(const int fildes) {

@@ -16,7 +16,7 @@ struct registered_socket_data {
 	short int state;
 };
 
-void registry_add(int fildes, const char* protocol);
+struct registered_socket_data* registry_add(int fildes);
 void registry_remove(int fildes);
 
 struct registered_socket_data* registry_find(int fildes);

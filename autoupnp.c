@@ -108,9 +108,12 @@ int socket(const int domain, const int type, const int protocol) {
 	/* valid IPv4 socket, either TCP or UDP */
 	if (fd != -1 && domain == AF_INET) {
 		const char* const proto = getproto(type, protocol);
+		struct registered_socket_data* d;
 
-		if (proto)
-			registry_add(fd, proto);
+		if (proto && ((d = registry_add(fd)))) {
+			d->protocol = proto;
+			d->state = RS_NONE;
+		}
 	}
 
 	return fd;
