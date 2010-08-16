@@ -20,5 +20,9 @@ $(LIB): $(OBJS)
 
 clean:
 	rm -f $(LIB) $(OBJS)
+	+make $(MAKEFLAGS) -C tests clean
 
-.PHONY: all clean
+tests:
+	+make $(MAKEFLAGS) -C tests all
+
+.PHONY: all clean tests
