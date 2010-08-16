@@ -28,6 +28,13 @@ enum replaced_func {
 	rf_last
 };
 
+enum registered_socket_state {
+	RS_NONE = 0,
+	RS_BOUND = 1,
+	RS_LISTENING = 2,
+	RS_WORKING = 3
+};
+
 static void xchg_errno(void) {
 	static int saved_errno = 0;
 	const int tmp = errno;
