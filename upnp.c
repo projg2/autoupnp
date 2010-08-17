@@ -22,9 +22,10 @@ struct igd_data {
 	char lan_addr[16];
 };
 
+static int igd_set_up = 0;
+
 static struct igd_data* setup_igd(void) {
 	static struct igd_data igd_data;
-	static int igd_set_up = 0;
 
 	if (!igd_set_up) {
 		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0);
@@ -46,8 +47,8 @@ static struct igd_data* setup_igd(void) {
 #pragma GCC visibility push(hidden)
 
 void dispose_igd(void) {
-	struct igd_data* igd_data = setup_igd();
-	FreeUPNPUrls(&(igd_data->urls));
+	if (igd_set_up)
+		FreeUPNPUrls(&(setup_igd()->urls));
 }
 
 int enable_redirect(struct registered_socket_data* rs) {
