@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <pthread.h>
+
 #include "registry.h"
 
 #pragma GCC visibility push(hidden)
@@ -22,11 +24,14 @@ struct registered_socket {
 };
 
 static struct registered_socket* socket_registry = NULL;
+static pthread_rwlock_t socket_registry_lock;
 
 void init_registry(void) {
+	pthread_rwlock_init(&socket_registry_lock, NULL);
 }
 
 void dispose_registry(void) {
+	pthread_rwlock_destroy(&socket_registry_lock);
 }
 
 struct registered_socket_data* registry_add(const int fildes) {
@@ -37,8 +42,12 @@ struct registered_socket_data* registry_add(const int fildes) {
 
 	new_socket->fd = fildes;
 	new_socket->pid = getpid();
+
+	/* Appending is an atomic op, so we can just lock for reading. */
+	pthread_rwlock_rdlock(&socket_registry_lock);
 	new_socket->next = socket_registry;
 	socket_registry = new_socket;
+	pthread_rwlock_unlock(&socket_registry_lock);
 
 	return &(new_socket->data);
 }
@@ -47,6 +56,7 @@ void registry_remove(const int fildes) {
 	struct registered_socket *i, *prev;
 	const pid_t mypid = getpid();
 
+	pthread_rwlock_wrlock(&socket_registry_lock);
 	for (i = socket_registry, prev = NULL; i; prev = i, i = i->next) {
 		if (i->fd == fildes && i->pid == mypid) {
 			if (prev)
@@ -57,6 +67,7 @@ void registry_remove(const int fildes) {
 			break;
 		}
 	}
+	pthread_rwlock_unlock(&socket_registry_lock);
 }
 
 struct registered_socket_data* registry_find(const int fildes) {
@@ -64,12 +75,14 @@ struct registered_socket_data* registry_find(const int fildes) {
 	const pid_t mypid = getpid();
 	struct registered_socket_data* ret = NULL;
 
+	pthread_rwlock_rdlock(&socket_registry_lock);
 	for (i = socket_registry; i; i = i->next) {
 		if (i->fd == fildes && i->pid == mypid) {
 			ret = &(i->data);
 			break;
 		}
 	}
+	pthread_rwlock_unlock(&socket_registry_lock);
 
 	return ret;
 }
@@ -79,6 +92,9 @@ struct registered_socket_data* registry_yield(void) {
 	static int iteration_done = 1;
 	struct registered_socket* ret;
 	const pid_t mypid = getpid();
+
+	/* XXX: additional thread security required. */
+	pthread_rwlock_rdlock(&socket_registry_lock);
 
 	if (iteration_done) {
 		i = socket_registry;
@@ -93,6 +109,8 @@ struct registered_socket_data* registry_yield(void) {
 		i = i->next;
 	else
 		iteration_done = 1;
+
+	pthread_rwlock_unlock(&socket_registry_lock);
 
 	if (ret)
 		return &(ret->data);
