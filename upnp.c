@@ -6,6 +6,8 @@
 
 #include <stdlib.h>
 
+#include <pthread.h>
+
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
@@ -23,10 +25,16 @@ struct igd_data {
 };
 
 static int igd_set_up = 0;
+static pthread_mutex_t igd_data_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static void unlock_igd(void) {
+	pthread_mutex_unlock(&igd_data_lock);
+}
 
 static struct igd_data* setup_igd(void) {
 	static struct igd_data igd_data;
 
+	pthread_mutex_lock(&igd_data_lock);
 	if (!igd_set_up) {
 		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0);
 
@@ -41,6 +49,8 @@ static struct igd_data* setup_igd(void) {
 
 	if (igd_set_up)
 		return &igd_data;
+	else
+		unlock_igd();
 	return NULL;
 }
 
@@ -78,6 +88,7 @@ int enable_redirect(struct registered_socket_data* rs) {
 			user_notify(notify_error, "UPNP_AddPortMapping(%s, %s, %s) failed: %d (%s).",
 					rs->port, igd_data->lan_addr, rs->protocol, ret, strupnperror(ret));
 
+		unlock_igd();
 		return ret;
 	} else
 		return -1;
@@ -99,6 +110,7 @@ int disable_redirect(struct registered_socket_data* rs) {
 			user_notify(notify_error, "UPNP_DeletePortMapping(%s, %s) failed: %d (%s).",
 					rs->port, rs->protocol, ret, strupnperror(ret));
 
+		unlock_igd();
 		return ret;
 	} else
 		return -1;
