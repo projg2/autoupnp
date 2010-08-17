@@ -45,8 +45,10 @@ static void xchg_errno(void) {
 }
 
 static void exit_handler(void) {
+	static pthread_mutex_t exit_lock = PTHREAD_MUTEX_INITIALIZER;
 	struct registered_socket_data* i;
 
+	pthread_mutex_lock(&exit_lock);
 	while ((i = registry_yield())) {
 		if (i->state == RS_WORKING)
 			disable_redirect(i);
@@ -56,6 +58,7 @@ static void exit_handler(void) {
 	dispose_igd();
 	dispose_notify();
 	dispose_registry();
+	pthread_mutex_unlock(&exit_lock);
 }
 
 static void init_handler(void) {
