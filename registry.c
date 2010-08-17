@@ -48,7 +48,7 @@ void registry_remove(const int fildes) {
 			else
 				socket_registry = i->next;
 			free(i);
-			return;
+			break;
 		}
 	}
 }
@@ -56,13 +56,16 @@ void registry_remove(const int fildes) {
 struct registered_socket_data* registry_find(const int fildes) {
 	struct registered_socket* i;
 	const pid_t mypid = getpid();
+	struct registered_socket_data* ret = NULL;
 
 	for (i = socket_registry; i; i = i->next) {
-		if (i->fd == fildes && i->pid == mypid)
-			return &(i->data);
+		if (i->fd == fildes && i->pid == mypid) {
+			ret = &(i->data);
+			break;
+		}
 	}
 
-	return NULL;
+	return ret;
 }
 
 struct registered_socket_data* registry_yield(void) {
