@@ -9,6 +9,8 @@
 
 #include <syslog.h>
 
+#include <pthread.h>
+
 #ifdef HAVE_LIBNOTIFY
 #	include <libnotify/notify.h>
 #endif
@@ -25,6 +27,9 @@ void dispose_notify(void) {
 }
 
 void user_notify(enum notify_type type, const char* const format, ...) {
+#ifdef HAVE_LIBNOTIFY
+	pthread_mutex_t notify_init_lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 	va_list ap;
 	char buf[1024];
 	int syslog_type;
@@ -47,7 +52,12 @@ void user_notify(enum notify_type type, const char* const format, ...) {
 	}
 
 #ifdef HAVE_LIBNOTIFY
-	if (notify_is_initted() || notify_init("autoupnp")) {
+	pthread_mutex_lock(&notify_init_lock);
+	if (!notify_is_initted())
+		notify_init("autoupnp");
+	pthread_mutex_unlock(&notify_init_lock);
+
+	if (notify_is_initted()) {
 		NotifyNotification* n = notify_notification_new(
 				"AutoUPnP", buf, notify_icon, NULL);
 
