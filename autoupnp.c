@@ -15,6 +15,8 @@
 #include <unistd.h>
 #include <netinet/in.h>
 
+#include <pthread.h>
+
 #include "notify.h"
 #include "registry.h"
 #include "upnp.h"
@@ -45,7 +47,9 @@ static void xchg_errno(void) {
 static void* const get_func(const enum replaced_func rf) {
 	static void* libc_handle = NULL;
 	static void* funcs[rf_last];
+	static pthread_mutex_t get_func_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+	pthread_mutex_lock(&get_func_mutex);
 	if (!libc_handle) {
 		const char* const replaced_func_names[rf_last] =
 			{ "socket", "bind", "listen", "close" };
@@ -81,6 +85,7 @@ static void* const get_func(const enum replaced_func rf) {
 
 		xchg_errno();
 	}
+	pthread_mutex_unlock(&get_func_mutex);
 
 	return funcs[rf];
 }
