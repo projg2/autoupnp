@@ -50,6 +50,7 @@ static void exit_handler(void) {
 	while ((i = registry_yield())) {
 		if (i->state == RS_WORKING)
 			disable_redirect(i);
+		registry_unlock(i);
 	}
 
 	dispose_igd();
@@ -144,6 +145,7 @@ int socket(const int domain, const int type, const int protocol) {
 		if (proto && ((d = registry_add(fd)))) {
 			d->protocol = proto;
 			d->state = RS_NONE;
+			registry_unlock(d);
 		}
 	}
 
@@ -169,6 +171,8 @@ int bind(const int socket, const struct sockaddr* const address,
 				if (rs->state == RS_WORKING)
 					enable_redirect(rs);
 			}
+
+			registry_unlock(rs);
 		}
 	}
 
@@ -186,6 +190,8 @@ int listen(const int socket, const int backlog) {
 			rs->state |= RS_LISTENING;
 			if (rs->state == RS_WORKING)
 				enable_redirect(rs);
+
+			registry_unlock(rs);
 		}
 	}
 
@@ -199,6 +205,7 @@ int close(const int fildes) {
 	if (rs) {
 		if (rs->state == RS_WORKING)
 			disable_redirect(rs);
+		registry_unlock(rs);
 		registry_remove(fildes);
 	}
 

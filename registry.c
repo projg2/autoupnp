@@ -42,6 +42,9 @@ struct registered_socket_data* registry_add(const int fildes) {
 
 	new_socket->fd = fildes;
 	new_socket->pid = getpid();
+	pthread_mutex_init(&(new_socket->data.lock), NULL);
+	/* Lock it soon enough to make sure find() won't get it before. */
+	pthread_mutex_lock(&(new_socket->data.lock));
 
 	/* Appending is an atomic op, so we can just lock for reading. */
 	pthread_rwlock_rdlock(&socket_registry_lock);
@@ -59,10 +62,16 @@ void registry_remove(const int fildes) {
 	pthread_rwlock_wrlock(&socket_registry_lock);
 	for (i = socket_registry, prev = NULL; i; prev = i, i = i->next) {
 		if (i->fd == fildes && i->pid == mypid) {
+			/* Make sure nobody uses the socket any longer. */
+			pthread_mutex_lock(&(i->data.lock));
+
 			if (prev)
 				prev->next = i->next;
 			else
 				socket_registry = i->next;
+
+			pthread_mutex_unlock(&(i->data.lock));
+			pthread_mutex_destroy(&(i->data.lock));
 			free(i);
 			break;
 		}
@@ -78,6 +87,7 @@ struct registered_socket_data* registry_find(const int fildes) {
 	pthread_rwlock_rdlock(&socket_registry_lock);
 	for (i = socket_registry; i; i = i->next) {
 		if (i->fd == fildes && i->pid == mypid) {
+			pthread_mutex_lock(&(i->data.lock));
 			ret = &(i->data);
 			break;
 		}
@@ -110,12 +120,19 @@ struct registered_socket_data* registry_yield(void) {
 	else
 		iteration_done = 1;
 
+	if (ret)
+		pthread_mutex_lock(&(ret->data.lock));
+
 	pthread_rwlock_unlock(&socket_registry_lock);
 
 	if (ret)
 		return &(ret->data);
 	else
 		return NULL;
+}
+
+void registry_unlock(struct registered_socket_data* sock) {
+	pthread_mutex_unlock(&(sock->lock));
 }
 
 #pragma GCC visibility pop
