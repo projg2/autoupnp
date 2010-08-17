@@ -9,6 +9,9 @@ struct registered_socket_data {
 	short int state;
 };
 
+void init_registry(void);
+void dispose_registry(void);
+
 struct registered_socket_data* registry_add(int fildes);
 void registry_remove(int fildes);
 

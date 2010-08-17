@@ -44,6 +44,10 @@ static void xchg_errno(void) {
 	saved_errno = tmp;
 }
 
+static void init_handler(void) {
+	init_registry();
+}
+
 static void* const get_func(const enum replaced_func rf) {
 	static void* libc_handle = NULL;
 	static void* funcs[rf_last];
@@ -83,6 +87,7 @@ static void* const get_func(const enum replaced_func rf) {
 		if (failure)
 			exit(EXIT_FAILURE);
 
+		init_handler();
 		xchg_errno();
 	}
 	pthread_mutex_unlock(&get_func_mutex);
@@ -166,6 +171,7 @@ static void exit_handler(void) {
 
 	dispose_igd();
 	dispose_notify();
+	dispose_registry();
 }
 
 int listen(const int socket, const int backlog) {

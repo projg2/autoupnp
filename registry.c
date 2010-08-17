@@ -23,6 +23,12 @@ struct registered_socket {
 
 static struct registered_socket* socket_registry = NULL;
 
+void init_registry(void) {
+}
+
+void dispose_registry(void) {
+}
+
 struct registered_socket_data* registry_add(const int fildes) {
 	struct registered_socket* new_socket = malloc(sizeof(*new_socket));
 
