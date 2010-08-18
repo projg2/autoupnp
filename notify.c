@@ -44,11 +44,14 @@ void user_notify(enum notify_type type, const char* const format, ...) {
 			syslog_type = LOG_ERR;
 			notify_icon = "network-error";
 			break;
-		case notify_info:
+		case notify_removed:
+			syslog_type = LOG_INFO;
+			notify_icon = "network-idle";
+			break;
+		case notify_added:
 		default:
 			syslog_type = LOG_INFO;
 			notify_icon = "network-receive";
-			break;
 	}
 
 #ifdef HAVE_LIBNOTIFY

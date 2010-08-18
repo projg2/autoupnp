@@ -2,7 +2,8 @@
 #define AUTOUPNP_NOTIFY_H
 
 enum notify_type {
-	notify_info,
+	notify_added,
+	notify_removed,
 	notify_error
 };
 

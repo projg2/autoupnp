@@ -79,10 +79,10 @@ int enable_redirect(struct registered_socket_data* rs) {
 					igd_data->urls.controlURL,
 					igd_data->data.servicetype,
 					extip))
-				user_notify(notify_info, "%s:%s (%s) forwarded successfully to %s:%s.",
+				user_notify(notify_added, "%s:%s (%s) forwarded successfully to %s:%s.",
 						extip, rs->port, rs->protocol, igd_data->lan_addr, rs->port);
 			else
-				user_notify(notify_info, "Port %s (%s) forwarded successfully to %s:%s.",
+				user_notify(notify_added, "Port %s (%s) forwarded successfully to %s:%s.",
 						rs->port, rs->protocol, igd_data->lan_addr, rs->port);
 		} else
 			user_notify(notify_error, "UPNP_AddPortMapping(%s, %s, %s) failed: %d (%s).",
@@ -104,7 +104,7 @@ int disable_redirect(struct registered_socket_data* rs) {
 				rs->port, rs->protocol, NULL);
 
 		if (ret == 0)
-			user_notify(notify_info, "Port forwarding for port %s (%s) removed successfully.",
+			user_notify(notify_removed, "Port forwarding for port %s (%s) removed successfully.",
 					rs->port, rs->protocol);
 		else
 			user_notify(notify_error, "UPNP_DeletePortMapping(%s, %s) failed: %d (%s).",
