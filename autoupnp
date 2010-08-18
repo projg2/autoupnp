@@ -86,7 +86,19 @@ install_preload() {
 }
 
 uninstall_preload() {
-	echo 'XXX: not yet implemented' >&2
+	[ ${#} -eq 0 ] && set -- ~/.bash_profile ~/.zprofile ~/.profile
+
+	while [ ${#} -gt 0 ]; do
+		if [ -f "${1}" ]; then
+			if grep 'eval.*autoupnp on[^a-z]*$' "${1}" >/dev/null; then
+				echo "Removing from ${1}." >&2
+				# risky -- removes the whole line
+				sed -i -e '/eval.*autoupnp on[^a-z]*$/d' "${1}"
+			fi
+		fi
+
+		shift
+	done
 }
 
 if [ ${#} -gt 0 ]; then
@@ -105,7 +117,8 @@ if [ ${#} -gt 0 ]; then
 			install_preload "${@}"
 			;;
 		uninstall)
-			uninstall_preload
+			shift
+			uninstall_preload "${@}"
 			;;
 		*)
 			enable_preload
