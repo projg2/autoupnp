@@ -11,9 +11,9 @@ autoupnp
 	to execute subshell with AutoUPnP LD_PRELOAD enabled.
 autoupnp <command> [...]
 	to execute the command with AutoUPnP LD_PRELOAD enabled.
-. autoupnp on
+eval "\$(autoupnp on)"
 	to export AutoUPnP LD_PRELOAD to the currently running shell.
-. autoupnp off
+eval "\$(autoupnp off)"
 	to remove AutoUPnP from LD_PRELOAD in the currently running shell.
 autoupnp install
 	to add the '. autoupnp on' call to your ~/.bash_profile, ~/.profile...
@@ -29,20 +29,24 @@ enable_preload() {
 		shift
 	done
 
-	LD_PRELOAD=${LD_PRELOAD+${LD_PRELOAD} }autoupnp.so
-	export LD_PRELOAD
+	echo 'export LD_PRELOAD="${LD_PRELOAD+${LD_PRELOAD} }autoupnp.so"'
 }
 
 disable_preload() {
 	set -- ${LD_PRELOAD}
 
-	LD_PRELOAD=
+	unset LD_PRELOAD
 	while [ ${#} -gt 0 ]; do
 		[ ${1} != 'autoupnp.so' ] \
 				&& LD_PRELOAD=${LD_PRELOAD+${LD_PRELOAD} }${1}
 		shift
 	done
-	export LD_PRELOAD
+
+	if [ -n "${LD_PRELOAD}" ]; then
+		printf 'export LD_PRELOAD="%s"\n' "$(echo "${LD_PRELOAD}" | sed -e 's:":\\":')"
+	else
+		echo 'unset LD_PRELOAD'
+	fi
 }
 
 install_preload() {
