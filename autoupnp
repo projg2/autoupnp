@@ -126,6 +126,6 @@ if [ ${#} -gt 0 ]; then
 	esac
 else
 	echo 'Starting AutoUPnP-enabled shell.' >&2
-	enable_preload
+	eval "$(enable_preload)"
 	exec "${SHELL:-/bin/sh}"
 fi
