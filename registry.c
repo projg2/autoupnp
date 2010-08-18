@@ -25,12 +25,21 @@ struct registered_socket {
 
 static struct registered_socket* socket_registry = NULL;
 static pthread_rwlock_t socket_registry_lock;
+static pthread_mutex_t socket_registry_yield_lock;
 
 void init_registry(void) {
+	pthread_mutexattr_t mattr;
+
 	pthread_rwlock_init(&socket_registry_lock, NULL);
+
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&socket_registry_yield_lock, &mattr);
+	pthread_mutexattr_destroy(&mattr);
 }
 
 void dispose_registry(void) {
+	pthread_mutex_destroy(&socket_registry_yield_lock);
 	pthread_rwlock_destroy(&socket_registry_lock);
 }
 
@@ -103,26 +112,46 @@ struct registered_socket_data* registry_yield(void) {
 	struct registered_socket* ret;
 	const pid_t mypid = getpid();
 
-	/* XXX: additional thread security required. */
+	/* To sum up, we're using the following locks here:
+	 * - rwlock_rdlock() for the list operation time,
+	 * - recursive mutex_lock() once for the function call time,
+	 *	second time for the whole iteration time,
+	 * - socket-level mutex_lock() for the current and next item.
+	 */
+
+	/* We do not need to keep the rdlock throughout the whole iteration,
+	 * as we're keeping socket-level locks. */
 	pthread_rwlock_rdlock(&socket_registry_lock);
+	pthread_mutex_lock(&socket_registry_yield_lock);
 
 	if (iteration_done) {
+		/* Lock recursively to ensure iterator thread safety. */
+		pthread_mutex_lock(&socket_registry_yield_lock);
+
 		i = socket_registry;
-		iteration_done = 0;
+		/* Disable iteration_done a little later. */
 	}
 
 	while (i && i->pid != mypid)
 		i = i->next;
 
+	if (iteration_done) {
+		if (i)
+			pthread_mutex_lock(&(i->data.lock));
+		iteration_done = 0;
+	}
+
 	ret = i;
-	if (i)
+	if (i) {
 		i = i->next;
-	else
+		if (i)
+			pthread_mutex_lock(&(i->data.lock));
+	} else {
 		iteration_done = 1;
+		pthread_mutex_unlock(&socket_registry_yield_lock);
+	}
 
-	if (ret)
-		pthread_mutex_lock(&(ret->data.lock));
-
+	pthread_mutex_unlock(&socket_registry_yield_lock);
 	pthread_rwlock_unlock(&socket_registry_lock);
 
 	if (ret)
