@@ -17,7 +17,10 @@ Dependencies
 
 The only obligatory requirement is a POSIX-compatible standard C library
 implementation (or at least one providing POSIX sockets, dl*() family
-of functions, syslog() and snprintf() [C99]).
+of functions, syslog(), snprintf() [C99] and pthread functions).
+
+If the C library doesn't come with pthread support nor even mutex/rwlock
+function stubs, AutoUPnP can use libpthread-stubs instead (from xorg).
 
 If available, AutoUPnP will use IPPROTO_* constants and GNU RTLD_NEXT
 dlsym() extension.
