@@ -52,7 +52,12 @@ disable_preload() {
 install_preload() {
 	if [ ${#} -gt 0 ]; then
 		while [ ${#} -gt 0 ]; do
-			echo "XXX: install in ${1}" >&2
+			if grep 'eval.*autoupnp on' "${1}" >/dev/null; then
+				echo "Already installed in ${1}." >&2
+			else
+				echo "Installing in ${1}." >&2
+				echo 'eval "$(autoupnp on)"' >> "${1}"
+			fi
 			shift
 		done
 	else
