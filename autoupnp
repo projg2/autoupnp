@@ -56,34 +56,27 @@ install_preload() {
 			shift
 		done
 	else
-		set -- ~/.bash_profile bash ~/.zprofile zsh
+		set -- ~/.bash_profile bash ~/.zprofile zsh ~/.profile sh
 
 		while [ ${#} -gt 0 ]; do
 			if [ -f "${1}" ]; then
-				if [ ! -f ~/.profile ] || ! grep '\(\.\|source\) ~/.profile' "${1}" >/dev/null; then
+				if [ ${2} = sh -o ! -f ~/.profile ] || ! grep '\(\.\|source\) ~/.profile' "${1}" >/dev/null; then
 					install_preload "${1}"
 				fi
 			elif [ -x /bin/${2} ]; then
 				echo "NOTICE: if you'd like to have AutoUPnP enabled for ${2} shell, please:" >&2
 				echo "$ touch ${1}" >&2
+				if [ ${2} = sh -a \( -f ~/.bash_profile -o -f ~/.zprofile \) ]; then
+					echo >&2
+					echo 'You might also like to source that file within other shell startup files:' >&2
+					echo '	. ~/.profile' >&2
+					echo 'within your ~/.bash_profile and/or ~/.zprofile.' >&2
+				fi
 			fi
 
 			shift
 			shift
 		done
-
-		if [ -f ~/.profile ]; then
-			install_preload ~/.profile
-		elif ! cmp -s /bin/sh /bin/bash && ! cmp -s /bin/sh /bin/zsh; then
-			echo 'WARNING: /bin/sh seems to not match /bin/{bash,zsh} but no ~/.profile' >&2
-			echo "exists. If you'd like to enable AutoUPnP for non-bash POSIX shells like" >&2
-			echo 'dash, please first: $ touch ~/.profile' >&2
-			if [ -f ~/.bash_profile -o -f ~/.zprofile ]; then
-				echo >&2
-				echo 'You might also consider moving your ~/.bash_profile and/or ~/.zprofile' >&2
-				echo 'declarations to ~/.profile and sourcing the latter file within the former.' >&2
-			fi
-		fi
 	fi
 }
 
