@@ -15,6 +15,10 @@ autoupnp <command> [...]
 	to export AutoUPnP LD_PRELOAD to the currently running shell.
 . autoupnp off
 	to remove AutoUPnP from LD_PRELOAD in the currently running shell.
+autoupnp install
+	to add the '. autoupnp on' call to your ~/.bash_profile, ~/.profile...
+autoupnp uninstall
+	to remove the '. autoupnp on' from your ~/.bash_profile, ~/.profile...
 _EOF_
 }
 
@@ -41,6 +45,55 @@ disable_preload() {
 	export LD_PRELOAD
 }
 
+install_preload() {
+	if [ ${#} -gt 0 ]; then
+		while [ ${#} -gt 0 ]; do
+			echo "XXX: install in ${1}" >&2
+			shift
+		done
+	else
+		# XXX: zsh support?
+
+		# Scenario 1) .bash_profile & .profile exist
+		if [ -f ~/.bash_profile -a -f ~/.profile ]; then
+			# 1a) .profile is sourced within .bash_profile
+			# (yep, the regexp is poor)
+			if grep '\(\.\|source\) ~/.profile' ~/.bash_profile >/dev/null; then
+				install_preload ~/.profile
+			else # 1b) .profile and .bash_profile are separate files
+				install_preload ~/.bash_profile ~/.profile
+			fi
+		# Scenario 2) .bash_profile exists but no .profile
+		elif [ -f ~/.bash_profile ]; then
+			install_preload ~/.bash_profile
+
+			# 2b) /bin/sh != /bin/bash
+			if ! cmp -s /bin/sh /bin/bash; then
+				echo 'WARNING: /bin/sh seems to not match /bin/bash but no ~/.profile exists.' >&2
+				echo "If you'd like to enable AutoUPnP for non-bash POSIX shells like dash," >&2
+				echo 'please first: $ touch ~/.profile' >&2
+				echo >&2
+				echo 'You might also consider moving your ~/.bash_profile declarations' >&2
+				echo 'to ~/.profile and sourcing it within ~/.bash_profile.' >&2
+			fi
+		# Scenario 3) .profile exists
+		elif [ -f ~/.profile ]; then
+			install_preload ~/.profile
+		# Scenario 4) no startup files found
+		else
+			echo 'No standard ~/.*profile files found. Please either touch the necessary files' >&2
+			echo "or pass their paths to 'autoupnp install' call, i.e.:" >&2
+			echo '	$ touch ~/.bash_profile; autoupnp install' >&2
+			echo 'or:' >&2
+			echo '	$ autoupnp install ~/.bash_profile' >&2
+		fi
+	fi
+}
+
+uninstall_preload() {
+	echo 'XXX: not yet implemented' >&2
+}
+
 if [ ${#} -gt 0 ]; then
 	case "${1}" in
 		-h|-?|--help)
@@ -52,9 +105,16 @@ if [ ${#} -gt 0 ]; then
 		off)
 			disable_preload
 			;;
+		install)
+			shift
+			install_preload "${@}"
+			;;
+		uninstall)
+			uninstall_preload
+			;;
 		*)
 			enable_preload
-			exec "$@"
+			exec "${@}"
 	esac
 else
 	echo 'Starting AutoUPnP-enabled shell.' >&2
