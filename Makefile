@@ -1,5 +1,5 @@
 LIB = autoupnp.so
-OBJS = autoupnp.o notify.o privdrop.o registry.o upnp.o
+OBJS = autoupnp.o notify.o registry.o upnp.o
 
 WANT_LIBNOTIFY = true
 

@@ -18,7 +18,6 @@
 #include <pthread.h>
 
 #include "notify.h"
-#include "privdrop.h"
 #include "registry.h"
 #include "upnp.h"
 
@@ -50,16 +49,12 @@ static void exit_handler(void) {
 	struct registered_socket_data* i;
 
 	pthread_mutex_lock(&exit_lock);
-	if (drop_privileges()) {
-		while ((i = registry_yield())) {
-			if (i->state == RS_WORKING)
-				disable_redirect(i);
-			registry_unlock(i);
-		}
-		restore_privileges();
+	while ((i = registry_yield())) {
+		if (i->state == RS_WORKING)
+			disable_redirect(i);
+		registry_unlock(i);
 	}
 
-	dispose_privileges();
 	dispose_igd();
 	dispose_notify();
 	dispose_registry();
@@ -176,10 +171,8 @@ int bind(const int socket, const struct sockaddr* const address,
 			if (sin->sin_family == AF_INET && sin->sin_addr.s_addr == INADDR_ANY) {
 				snprintf(rs->port, sizeof(rs->port), "%d", ntohs(sin->sin_port));
 				rs->state |= RS_BOUND;
-				if (rs->state == RS_WORKING && drop_privileges()) {
+				if (rs->state == RS_WORKING)
 					enable_redirect(rs);
-					restore_privileges();
-				}
 			}
 
 			registry_unlock(rs);
@@ -198,10 +191,8 @@ int listen(const int socket, const int backlog) {
 
 		if (rs) {
 			rs->state |= RS_LISTENING;
-			if (rs->state == RS_WORKING && drop_privileges()) {
+			if (rs->state == RS_WORKING)
 				enable_redirect(rs);
-				restore_privileges();
-			}
 
 			registry_unlock(rs);
 		}
@@ -215,10 +206,8 @@ int close(const int fildes) {
 	struct registered_socket_data* rs = registry_find(fildes);
 
 	if (rs) {
-		if (rs->state == RS_WORKING && drop_privileges()) {
+		if (rs->state == RS_WORKING)
 			disable_redirect(rs);
-			restore_privileges();
-		}
 		registry_unlock(rs);
 		registry_remove(fildes);
 	}
