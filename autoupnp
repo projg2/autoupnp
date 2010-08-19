@@ -33,7 +33,10 @@ enable_preload() {
 		shift
 	done
 
-	echo 'export LD_PRELOAD="${LD_PRELOAD+${LD_PRELOAD} }autoupnp.so"'
+	# Replace the libname with the full path if installing system-wide
+	# with no intent of using setuid.
+	set -- autoupnp.so
+	echo "export LD_PRELOAD=\"\${LD_PRELOAD+\${LD_PRELOAD} }${1}\""
 }
 
 disable_preload() {
