@@ -22,10 +22,14 @@ autoupnp uninstall
 _EOF_
 }
 
+endswith() {
+	[ "${2%/${1}}" != "${2}" -o "${1}" = "${2}" ]
+}
+
 enable_preload() {
 	set -- ${LD_PRELOAD}
 	while [ ${#} -gt 0 ]; do
-		[ ${1} = 'autoupnp.so' ] && return
+		endswith autoupnp.so ${1} && return
 		shift
 	done
 
@@ -37,8 +41,8 @@ disable_preload() {
 
 	unset LD_PRELOAD
 	while [ ${#} -gt 0 ]; do
-		[ ${1} != 'autoupnp.so' ] \
-				&& LD_PRELOAD=${LD_PRELOAD+${LD_PRELOAD} }${1}
+		endswith autoupnp.so ${1} \
+				|| LD_PRELOAD=${LD_PRELOAD+${LD_PRELOAD} }${1}
 		shift
 	done
 
