@@ -29,7 +29,7 @@ struct igd_data {
 };
 
 static int igd_set_up = 0;
-static pthread_mutex_t igd_data_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t igd_data_lock;
 
 static void unlock_igd(void) {
 	pthread_mutex_unlock(&igd_data_lock);
@@ -78,9 +78,21 @@ static const char* const mystrupnperror(const int err) {
 
 #pragma GCC visibility push(hidden)
 
+void init_igd(void) {
+	pthread_mutexattr_t mattr;
+
+	pthread_mutexattr_init(&mattr);
+	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
+	pthread_mutex_init(&igd_data_lock, &mattr);
+	pthread_mutexattr_destroy(&mattr);
+}
+
 void dispose_igd(void) {
-	if (igd_set_up)
+	if (igd_set_up) {
 		FreeUPNPUrls(&(setup_igd()->urls));
+		unlock_igd();
+		pthread_mutex_destroy(&igd_data_lock);
+	}
 }
 
 int enable_redirect(struct registered_socket_data* rs) {

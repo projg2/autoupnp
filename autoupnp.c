@@ -63,6 +63,7 @@ static void exit_handler(void) {
 
 static void init_handler(void) {
 	init_registry();
+	init_igd();
 	atexit(&exit_handler);
 }
 

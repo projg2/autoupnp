@@ -3,6 +3,7 @@
 
 #include "registry.h"
 
+void init_igd(void);
 void dispose_igd(void);
 
 int enable_redirect(struct registered_socket_data* rs);
