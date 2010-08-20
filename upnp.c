@@ -98,17 +98,17 @@ int enable_redirect(struct registered_socket_data* rs) {
 				"AutoUPNP-added port forwarding",
 				rs->protocol, NULL);
 
-		if (ret == 0) {
+		if (ret == UPNPCOMMAND_SUCCESS) {
 			char extip[16];
 
-			if (!UPNP_GetExternalIPAddress(
+			if (UPNP_GetExternalIPAddress(
 					igd_data->urls.controlURL,
 #ifdef LIBMINIUPNPC_SO_5
 					igd_data->data.first.servicetype,
 #else
 					igd_data->data.servicetype,
 #endif
-					extip))
+					extip) == UPNPCOMMAND_SUCCESS)
 				user_notify(notify_added, "%s:%s (%s) forwarded successfully to %s:%s.",
 						extip, rs->port, rs->protocol, igd_data->lan_addr, rs->port);
 			else
@@ -137,7 +137,7 @@ int disable_redirect(struct registered_socket_data* rs) {
 #endif
 				rs->port, rs->protocol, NULL);
 
-		if (ret == 0)
+		if (ret == UPNPCOMMAND_SUCCESS)
 			user_notify(notify_removed, "Port forwarding for port %s (%s) removed successfully.",
 					rs->port, rs->protocol);
 		else
