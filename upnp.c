@@ -58,6 +58,24 @@ static struct igd_data* setup_igd(void) {
 	return NULL;
 }
 
+static const char* const mystrupnperror(const int err) {
+	const char* const origdesc = strupnperror(err);
+
+	if (!origdesc) {
+		switch (err) {
+			case UPNPCOMMAND_INVALID_ARGS:
+				return "invalid arguments";
+			case UPNPCOMMAND_HTTP_ERROR:
+				return "HTTP/socket error";
+			case UPNPCOMMAND_UNKNOWN_ERROR:
+				return "unknown library error";
+			default:
+				return "unknown UPnP error";
+		}
+	} else
+		return origdesc;
+}
+
 #pragma GCC visibility push(hidden)
 
 void dispose_igd(void) {
@@ -98,7 +116,7 @@ int enable_redirect(struct registered_socket_data* rs) {
 						rs->port, rs->protocol, igd_data->lan_addr, rs->port);
 		} else
 			user_notify(notify_error, "UPNP_AddPortMapping(%s, %s, %s) failed: %d (%s).",
-					rs->port, igd_data->lan_addr, rs->protocol, ret, strupnperror(ret));
+					rs->port, igd_data->lan_addr, rs->protocol, ret, mystrupnperror(ret));
 
 		unlock_igd();
 		return ret;
@@ -124,7 +142,7 @@ int disable_redirect(struct registered_socket_data* rs) {
 					rs->port, rs->protocol);
 		else
 			user_notify(notify_error, "UPNP_DeletePortMapping(%s, %s) failed: %d (%s).",
-					rs->port, rs->protocol, ret, strupnperror(ret));
+					rs->port, rs->protocol, ret, mystrupnperror(ret));
 
 		unlock_igd();
 		return ret;
