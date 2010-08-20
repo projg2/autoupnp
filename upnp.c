@@ -91,8 +91,8 @@ void dispose_igd(void) {
 	if (igd_set_up) {
 		FreeUPNPUrls(&(setup_igd()->urls));
 		unlock_igd();
-		pthread_mutex_destroy(&igd_data_lock);
 	}
+	pthread_mutex_destroy(&igd_data_lock);
 }
 
 int enable_redirect(struct registered_socket_data* rs) {
