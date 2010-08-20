@@ -58,6 +58,12 @@ static struct igd_data* setup_igd(void) {
 	return NULL;
 }
 
+static void dispose_igd_data(void) {
+	FreeUPNPUrls(&(setup_igd()->urls));
+	igd_set_up = 0;
+	unlock_igd();
+}
+
 static const char* const mystrupnperror(const int err) {
 	const char* const origdesc = strupnperror(err);
 
@@ -88,18 +94,22 @@ void init_igd(void) {
 }
 
 void dispose_igd(void) {
-	if (igd_set_up) {
-		FreeUPNPUrls(&(setup_igd()->urls));
-		unlock_igd();
-	}
+	if (igd_set_up)
+		dispose_igd_data();
 	pthread_mutex_destroy(&igd_data_lock);
 }
 
 int enable_redirect(struct registered_socket_data* rs) {
 	const struct igd_data* igd_data = setup_igd();
+#ifdef LIBMINIUPNPC_SO_5
+	static int retrying = 0;
+#endif
 
 	if (igd_data) {
-		const int ret = UPNP_AddPortMapping(
+#ifndef LIBMINIUPNPC_SO_5
+		const
+#endif
+		int ret = UPNP_AddPortMapping(
 				igd_data->urls.controlURL,
 #ifdef LIBMINIUPNPC_SO_5
 				igd_data->data.first.servicetype,
@@ -126,6 +136,16 @@ int enable_redirect(struct registered_socket_data* rs) {
 			else
 				user_notify(notify_added, "Port %s (%s) forwarded successfully to %s:%s.",
 						rs->port, rs->protocol, igd_data->lan_addr, rs->port);
+#ifdef LIBMINIUPNPC_SO_5 /* older versions return success instead... */
+		} else if (!retrying && ret == UPNPCOMMAND_HTTP_ERROR) {
+			/* HTTP request failed? Maybe our IGD definitions are out-of-date.
+			 * Let's get rid of them and retry. */
+			dispose_igd_data();
+
+			retrying++;
+			ret = enable_redirect(rs);
+			retrying--;
+#endif
 		} else
 			user_notify(notify_error, "UPNP_AddPortMapping(%s, %s, %s) failed: %d (%s).",
 					rs->port, igd_data->lan_addr, rs->protocol, ret, mystrupnperror(ret));
@@ -138,9 +158,15 @@ int enable_redirect(struct registered_socket_data* rs) {
 
 int disable_redirect(struct registered_socket_data* rs) {
 	const struct igd_data* igd_data = setup_igd();
+#ifdef LIBMINIUPNPC_SO_5
+	static int retrying = 0;
+#endif
 
 	if (igd_data) {
-		const int ret = UPNP_DeletePortMapping(
+#ifndef LIBMINIUPNPC_SO_5
+		const
+#endif
+		int ret = UPNP_DeletePortMapping(
 				igd_data->urls.controlURL,
 #ifdef LIBMINIUPNPC_SO_5
 				igd_data->data.first.servicetype,
@@ -152,6 +178,17 @@ int disable_redirect(struct registered_socket_data* rs) {
 		if (ret == UPNPCOMMAND_SUCCESS)
 			user_notify(notify_removed, "Port forwarding for port %s (%s) removed successfully.",
 					rs->port, rs->protocol);
+#ifdef LIBMINIUPNPC_SO_5 /* older versions return success instead... */
+		else if (!retrying && ret == UPNPCOMMAND_HTTP_ERROR) {
+			/* HTTP request failed? Maybe our IGD definitions are out-of-date.
+			 * Let's get rid of them and retry. */
+			dispose_igd_data();
+
+			retrying++;
+			ret = disable_redirect(rs);
+			retrying--;
+		}
+#endif
 		else
 			user_notify(notify_error, "UPNP_DeletePortMapping(%s, %s) failed: %d (%s).",
 					rs->port, rs->protocol, ret, mystrupnperror(ret));
