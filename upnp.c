@@ -12,6 +12,10 @@
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
 
+#ifdef UPNPCOMMAND_HTTP_ERROR
+#	define LIBMINIUPNPC_SO_5
+#endif
+
 #include "upnp.h"
 #include "notify.h"
 
@@ -67,7 +71,11 @@ int enable_redirect(struct registered_socket_data* rs) {
 	if (igd_data) {
 		const int ret = UPNP_AddPortMapping(
 				igd_data->urls.controlURL,
+#ifdef LIBMINIUPNPC_SO_5
+				igd_data->data.first.servicetype,
+#else
 				igd_data->data.servicetype,
+#endif
 				rs->port, rs->port, igd_data->lan_addr,
 				"AutoUPNP-added port forwarding",
 				rs->protocol, NULL);
@@ -77,7 +85,11 @@ int enable_redirect(struct registered_socket_data* rs) {
 
 			if (!UPNP_GetExternalIPAddress(
 					igd_data->urls.controlURL,
+#ifdef LIBMINIUPNPC_SO_5
+					igd_data->data.first.servicetype,
+#else
 					igd_data->data.servicetype,
+#endif
 					extip))
 				user_notify(notify_added, "%s:%s (%s) forwarded successfully to %s:%s.",
 						extip, rs->port, rs->protocol, igd_data->lan_addr, rs->port);
@@ -100,7 +112,11 @@ int disable_redirect(struct registered_socket_data* rs) {
 	if (igd_data) {
 		const int ret = UPNP_DeletePortMapping(
 				igd_data->urls.controlURL,
+#ifdef LIBMINIUPNPC_SO_5
+				igd_data->data.first.servicetype,
+#else
 				igd_data->data.servicetype,
+#endif
 				rs->port, rs->protocol, NULL);
 
 		if (ret == 0)
