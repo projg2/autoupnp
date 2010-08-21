@@ -72,8 +72,10 @@ static const char* const mystrupnperror(const int err) {
 		switch (err) {
 			case UPNPCOMMAND_INVALID_ARGS:
 				return "invalid arguments";
+#ifdef LIBMINIUPNPC_SO_5
 			case UPNPCOMMAND_HTTP_ERROR:
 				return "HTTP/socket error";
+#endif
 			case UPNPCOMMAND_UNKNOWN_ERROR:
 				return "unknown library error";
 			default:
