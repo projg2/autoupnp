@@ -38,9 +38,27 @@ Simply copy (or move) the 'autoupnp.so' library into a libdir of your
 choice. If you like, you may copy 'autoupnp' wrapper script to a bindir
 too.
 
-If you want to have AutoUPnP enabled by default, you'd probably like to
-add:
-	. autoupnp on
-into your ~/.bash_profile, ~/.profile, /etc/profile or a similar file
-of your choice. It is important to source the script as it needs to
-export the LD_PRELOAD var to the current environment.
+If you're installing AutoUPnP system-wide, you may want to 'clean'
+the wrapper script up of guessing functions and hardcode the library
+path. To do so, call:
+$ autoupnp cleanup <library-path> <output-filename>
+
+For example:
+$ ./autoupnp cleanup /usr/lib64/autoupnp.so /usr/bin/autoupnp
+$ chmod +x /usr/bin/autoupnp
+
+Please notice though you should not pass the actual script filename as
+the output filename as it doesn't use any temporary files.
+
+
+How to enable
+-------------
+
+After installing AutoUPnP, you'd probably like to enable it for one or
+more users. To do so, call:
+$ autoupnp install
+
+The wrapper script will look for known shell startup scripts in your
+homedir and install itself in them. You might need to create them
+beforehand, e.g.:
+$ touch ~/.profile ~/.bash_profile
