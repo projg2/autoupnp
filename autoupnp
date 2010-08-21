@@ -3,6 +3,8 @@
 # (c) 2010 Michał Górny
 # Released under the terms of the 3-clause BSD license
 
+unset IFS
+
 print_help() {
 	cat <<_EOF_
 Usage:
@@ -37,6 +39,29 @@ endswith() {
 
 #c+
 findlib() {
+	IFS=:
+	set -- ${LD_LIBRARY_PATH}
+	unset IFS
+
+	[ ${#} -eq 0 ] && set -- /usr/local/lib64 /usr/local/lib \
+		/usr/lib64 /usr/lib /lib64 /lib
+
+	while [ ${#} -gt 0 ]; do
+		if [ -f "${1}"/autoupnp.so ]; then
+			set -- "${1}"/autoupnp.so
+
+			# Maybe it's setuid or setgid? If it is, we must not specify
+			# the full path.
+			[ -n "$(find "${1}" -prune -type f \
+					\( -perm -u+s -o -perm -g+s \))" ] \
+				&& break
+
+			echo "${1}"
+			return
+		fi
+		shift
+	done
+
 	echo autoupnp.so
 }
 
