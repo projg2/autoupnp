@@ -20,12 +20,45 @@ autoupnp install
 autoupnp uninstall
 	to remove the '. autoupnp on' from your ~/.bash_profile, ~/.profile...
 _EOF_
+#c+
+	cat <<_EOF_
+autoupnp cleanup <libpath> <outputfn>
+	to cleanup the script for system-wide installs, hardcoding <libpath>
+	(can be either an absolute path or filename, it will be appended
+	as-is to the LD_PRELOAD) and outputting the resulting script
+	into <outputfn>.
+_EOF_
+#c-
 }
 
 endswith() {
 	[ "${2%/${1}}" != "${2}" -o "${1}" = "${2}" ]
 }
 
+#c+
+findlib() {
+	echo autoupnp.so
+}
+
+cleanup() {
+	if [ ${#} -eq 0 ]; then
+		echo 'No <libpath> specified, trying to find one ...' >&2
+		set -- "$(findlib)"
+		echo "... and using ${1}." >&2
+	fi
+
+	if [ ${#} -eq 1 ]; then
+		echo "No <outputfn> specified, defaulting to ${0}.out." >&2
+		set -- "${1}" "${0}".out
+	fi
+
+	sed \
+		-e '/^#c+$/,/^#c-$/{d;b}' \
+		-e "s\"\$(findlib)\"${1}\"" \
+		"${0}" > "${2}"
+}
+
+#c-
 enable_preload() {
 	set -- ${LD_PRELOAD}
 	while [ ${#} -gt 0 ]; do
@@ -33,9 +66,9 @@ enable_preload() {
 		shift
 	done
 
-	# Replace the libname with the full path if installing system-wide
-	# with no intent of using setuid.
-	set -- autoupnp.so
+	# Insert the full path below if installing system-wide with no
+	# intent of setuid.
+	set -- "$(findlib)"
 	echo "export LD_PRELOAD=\"\${LD_PRELOAD+\${LD_PRELOAD} }${1}\""
 }
 
@@ -127,6 +160,12 @@ if [ ${#} -gt 0 ]; then
 			shift
 			uninstall_preload "${@}"
 			;;
+#c+
+		cleanup)
+			shift
+			cleanup "${@}"
+			;;
+#c-
 		*)
 			enable_preload
 			exec "${@}"
