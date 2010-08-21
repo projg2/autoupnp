@@ -1,0 +1,26 @@
+Short ChangeLog for autoupnp-0.4 branch
+=======================================
+
+autoupnp-0.4.3
+--------------
+- support for libminiupnpc >= 1.4.20100609,
+- retrying after an HTTP request fails (i.e. if IGD address changes at
+	runtime),
+- cleaned up the libminiupnpc error handling,
+- library finding (for local installs) and path hardcoding (for PM
+	installs) within the wrapper script.
+
+autoupnp-0.4.2
+--------------
+- thread safety (with extensive use of mutexes and an R/W lock),
+- POSIX compatibility of the wrapper script (with usage change),
+- 'install' and 'uninstall' functions in the wrapper script.
+
+autoupnp-0.4.1
+--------------
+- forking programs support,
+- LD_PRELOAD-enabling wrapper script.
+
+autoupnp-0.4
+------------
+First release after the rewrite.
