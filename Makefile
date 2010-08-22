@@ -11,7 +11,7 @@ LLIBS = -ldl -lminiupnpc \
 	$$(pkg-config --libs pthread-stubs 2>/dev/null)
 
 all:
-	+make \
+	+$(MAKE) \
 		LCFLAGS="$$(echo $(LCFLAGS))" \
 		LLIBS="$$(echo $(LLIBS))" \
 		$(LIB)
@@ -24,9 +24,9 @@ $(LIB): $(OBJS)
 
 clean:
 	rm -f $(LIB) $(OBJS)
-	+make -C tests clean
+	+$(MAKE) -C tests clean
 
 tests:
-	+make -C tests all
+	+$(MAKE) -C tests all
 
 .PHONY: all clean tests
