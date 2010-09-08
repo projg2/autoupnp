@@ -1,4 +1,4 @@
-LIBPREFIX = lib
+LIBPREFIX =
 LIBSUFFIX = .so
 
 BIN = autoupnp
