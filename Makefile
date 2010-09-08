@@ -10,10 +10,11 @@ WANT_LIBNOTIFY = true
 
 DESTDIR =
 PREFIX = /usr
+DUMMYPREFIX = /
 LIBDIRNAME = lib
 
 LIBDIR = $(PREFIX)/$(LIBDIRNAME)
-DUMMYLIBDIR = /$(LIBDIRNAME)
+DUMMYLIBDIR = $(DUMMYPREFIX)/$(LIBDIRNAME)
 BINDIR = $(PREFIX)/bin
 
 LIBPERMS = a+rx
@@ -72,4 +73,19 @@ install-dummy: install $(DUMMYLIB)
 	cp $(DUMMYLIB) $(DESTDIR)$(DUMMYLIBDIR)/$(LIB)
 	chmod $(LIBPERMS),$(SUIDPERMS) $(DESTDIR)$(DUMMYLIBDIR)/$(LIB)
 
-.PHONY: all clean dummy tests install install-suid install-dummy
+ginstall: $(LIB)
+	into $(PREFIX)
+	dolib $(LIB)
+	dobin $(BIN)
+
+ginstall-suid: ginstall
+	fperms $(SUIDPERMS) $(LIBDIR)/$(LIB)
+
+ginstall-dummy: ginstall $(DUMMYLIB)
+	into $(DUMMYPREFIX)
+	newlib $(DUMMYLIB) $(LIB)
+	fperms $(SUIDPERMS) $(DUMMYLIBDIR)/$(LIB)
+
+.PHONY: all clean dummy tests \
+	install install-suid install-dummy \
+	ginstall ginstall-suid ginstall-dummy
