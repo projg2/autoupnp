@@ -17,6 +17,7 @@ LIBDIR = $(PREFIX)/$(LIBDIRNAME)
 DUMMYLIBDIR = $(DUMMYPREFIX)/$(LIBDIRNAME)
 BINDIR = $(PREFIX)/bin
 
+DIRUMASK = a+rx
 LIBPERMS = a+rx
 BINPERMS = a+rx
 SUIDPERMS = u+s,g+s
@@ -59,7 +60,7 @@ tests:
 	+$(MAKE) -C tests all
 
 install: $(LIB)
-	mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR)
+	umask $(DIRUMASK); mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR)
 	cp $(LIB) $(DESTDIR)$(LIBDIR)/
 	chmod $(LIBPERMS) $(DESTDIR)$(LIBDIR)/$(LIB)
 	cp $(BIN) $(DESTDIR)$(BINDIR)/
@@ -69,7 +70,7 @@ install-suid: install
 	chmod $(SUIDPERMS) $(DESTDIR)$(LIBDIR)/$(LIB)
 
 install-dummy: install $(DUMMYLIB)
-	mkdir -p $(DESTDIR)$(DUMMYLIBDIR)
+	umask $(DIRUMASK); mkdir -p $(DESTDIR)$(DUMMYLIBDIR)
 	cp $(DUMMYLIB) $(DESTDIR)$(DUMMYLIBDIR)/$(LIB)
 	chmod $(LIBPERMS),$(SUIDPERMS) $(DESTDIR)$(DUMMYLIBDIR)/$(LIB)
 
