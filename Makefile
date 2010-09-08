@@ -1,4 +1,7 @@
-LIB = autoupnp.so
+LIBPREFIX = lib
+LIBSUFFIX = .so
+
+LIB = $(LIBPREFIX)autoupnp$(LIBSUFFIX)
 OBJS = autoupnp.o notify.o registry.o upnp.o
 
 WANT_LIBNOTIFY = true
