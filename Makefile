@@ -5,6 +5,7 @@ BIN = autoupnp
 LIB = $(LIBPREFIX)autoupnp$(LIBSUFFIX)
 DUMMYLIB = $(LIBPREFIX)dummy$(LIBSUFFIX)
 OBJS = autoupnp.o notify.o registry.o upnp.o
+DUMMYOBJ = dummy.o
 
 WANT_LIBNOTIFY = true
 
@@ -40,10 +41,10 @@ $(LIB): $(OBJS)
 
 dummy: $(DUMMYLIB)
 
-$(DUMMYLIB): dummy.o
+$(DUMMYLIB): $(DUMMYOBJ)
 	$(CC) -shared $(LDFLAGS) $< -o $@
 
-dummy.o: dummy.c
+$(DUMMYOBJ): dummy.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 dummy.c:
@@ -53,7 +54,7 @@ dummy.c:
 	$(CC) -c $(LCFLAGS) $(CFLAGS) -o $@ $<
 
 clean:
-	rm -f $(LIB) $(OBJS) $(DUMMYLIB) dummy.o dummy.c
+	rm -f $(LIB) $(OBJS) $(DUMMYLIB) $(DUMMYOBJ) dummy.c
 	+$(MAKE) -C tests clean
 
 tests:
