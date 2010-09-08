@@ -83,27 +83,5 @@ install-dummy: install-common $(DUMMYLIB)
 	chmod $(LIBPERMS),$(SUIDPERMS) $(DESTDIR)$(DUMMYLIBDIR)/$(LIB)
 	sed -i -e 's:libautoupnp.so:$(LIB):g' $(DESTDIR)$(BINDIR)/$(BIN)
 
-ginstall: ginstall-common
-	sed -i \
-		-e 's:\(endswith \)libautoupnp.so:\1$(LIB):g' \
-		-e 's:\(set -- \)libautoupnp.so:\1$(LIBDIR)/$(LIB):g' \
-		$(DESTDIR)$(BINDIR)/$(BIN)
-
-ginstall-common: $(LIB)
-	into $(PREFIX)
-	dolib $(LIB)
-	dobin $(BIN)
-
-ginstall-suid: ginstall-common
-	fperms $(SUIDPERMS) $(LIBDIR)/$(LIB)
-	sed -i -e 's:libautoupnp.so:$(LIB):g' $(DESTDIR)$(BINDIR)/$(BIN)
-
-ginstall-dummy: ginstall-common $(DUMMYLIB)
-	into $(DUMMYPREFIX)
-	newlib $(DUMMYLIB) $(LIB)
-	fperms $(SUIDPERMS) $(DUMMYLIBDIR)/$(LIB)
-	sed -i -e 's:libautoupnp.so:$(LIB):g' $(DESTDIR)$(BINDIR)/$(BIN)
-
 .PHONY: all clean dummy tests \
-	install install-suid install-dummy install-common \
-	ginstall ginstall-suid ginstall-dummy ginstall-common
+	install install-suid install-dummy install-common
