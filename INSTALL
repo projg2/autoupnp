@@ -34,21 +34,17 @@ $ make WANT_LIBNOTIFY=false
 How to install
 --------------
 
-Simply copy (or move) the 'autoupnp.so' library into a libdir of your
-choice. If you like, you may copy 'autoupnp' wrapper script to a bindir
-too.
+Use one of the following make targets:
 
-If you're installing AutoUPnP system-wide, you may want to 'clean'
-the wrapper script up of guessing functions and hardcode the library
-path. To do so, call:
-$ autoupnp cleanup <library-path> <output-filename>
+* install, in order to perform a simple, non-suid install;
+* install-suid, in order to install suid&sgid,
+* install-dummy, in order to install the library non-suid
+	and a suid&sgid dummy wrapper library to silence ld.so.
 
-For example:
-$ ./autoupnp cleanup /usr/lib64/autoupnp.so /usr/bin/autoupnp
-$ chmod +x /usr/bin/autoupnp
-
-Please notice though you should not pass the actual script filename as
-the output filename as it doesn't use any temporary files.
+Each of these targets accepts the DESTDIR macro to specify a destination
+install tree (a fake root) and LIBDIRNAME to specify the libdir name
+(e.g. 'lib64'). There is a number of other macros; take a look
+at the Makefile for reference.
 
 
 How to enable
