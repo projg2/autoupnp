@@ -59,34 +59,38 @@ clean:
 tests:
 	+$(MAKE) -C tests all
 
-install: $(LIB)
+install: install-common
+
+install-common: $(LIB)
 	umask $(DIRUMASK); mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR)
 	cp $(LIB) $(DESTDIR)$(LIBDIR)/
 	chmod $(LIBPERMS) $(DESTDIR)$(LIBDIR)/$(LIB)
 	cp $(BIN) $(DESTDIR)$(BINDIR)/
 	chmod $(BINPERMS) $(DESTDIR)$(BINDIR)/$(BIN)
 
-install-suid: install
+install-suid: install-common
 	chmod $(SUIDPERMS) $(DESTDIR)$(LIBDIR)/$(LIB)
 
-install-dummy: install $(DUMMYLIB)
+install-dummy: install-common $(DUMMYLIB)
 	umask $(DIRUMASK); mkdir -p $(DESTDIR)$(DUMMYLIBDIR)
 	cp $(DUMMYLIB) $(DESTDIR)$(DUMMYLIBDIR)/$(LIB)
 	chmod $(LIBPERMS),$(SUIDPERMS) $(DESTDIR)$(DUMMYLIBDIR)/$(LIB)
 
-ginstall: $(LIB)
+ginstall: ginstall-common
+
+ginstall-common: $(LIB)
 	into $(PREFIX)
 	dolib $(LIB)
 	dobin $(BIN)
 
-ginstall-suid: ginstall
+ginstall-suid: ginstall-common
 	fperms $(SUIDPERMS) $(LIBDIR)/$(LIB)
 
-ginstall-dummy: ginstall $(DUMMYLIB)
+ginstall-dummy: ginstall-common $(DUMMYLIB)
 	into $(DUMMYPREFIX)
 	newlib $(DUMMYLIB) $(LIB)
 	fperms $(SUIDPERMS) $(DUMMYLIBDIR)/$(LIB)
 
 .PHONY: all clean dummy tests \
-	install install-suid install-dummy \
-	ginstall ginstall-suid ginstall-dummy
+	install install-suid install-dummy install-common \
+	ginstall ginstall-suid ginstall-dummy ginstall-common
