@@ -2,6 +2,7 @@ LIBPREFIX = lib
 LIBSUFFIX = .so
 
 LIB = $(LIBPREFIX)autoupnp$(LIBSUFFIX)
+DUMMYLIB = $(LIBPREFIX)dummy$(LIBSUFFIX)
 OBJS = autoupnp.o notify.o registry.o upnp.o
 
 WANT_LIBNOTIFY = true
@@ -22,14 +23,25 @@ all:
 $(LIB): $(OBJS)
 	$(CC) -shared $(LDFLAGS) $(OBJS) $(LLIBS) -o $@
 
+dummy: $(DUMMYLIB)
+
+$(DUMMYLIB): dummy.o
+	$(CC) -shared $(LDFLAGS) $< -o $@
+
+dummy.o: dummy.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+dummy.c:
+	touch $@
+
 .c.o:
 	$(CC) -c $(LCFLAGS) $(CFLAGS) -o $@ $<
 
 clean:
-	rm -f $(LIB) $(OBJS)
+	rm -f $(LIB) $(OBJS) $(DUMMYLIB) dummy.o dummy.c
 	+$(MAKE) -C tests clean
 
 tests:
 	+$(MAKE) -C tests all
 
-.PHONY: all clean tests
+.PHONY: all clean dummy tests
