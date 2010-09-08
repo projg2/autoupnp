@@ -1,6 +1,12 @@
 Short ChangeLog for autoupnp-0.4 branch
 =======================================
 
+autoupnp-0.4.4
+--------------
+- 'install' and 'ginstall' targets within the Makefile,
+- ability to install a 'dummy' lib behind the real libautoupnp.so
+	to safely satisfy ld.so's suid&sgid greed.
+
 autoupnp-0.4.3
 --------------
 - support for libminiupnpc >= 1.4.20100609,
