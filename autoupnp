@@ -29,13 +29,13 @@ endswith() {
 enable_preload() {
 	set -- ${LD_PRELOAD}
 	while [ ${#} -gt 0 ]; do
-		endswith autoupnp.so ${1} && return
+		endswith libautoupnp.so ${1} && return
 		shift
 	done
 
 	# Replace the libname with the full path if installing system-wide
 	# with no intent of using setuid.
-	set -- autoupnp.so
+	set -- libautoupnp.so
 	echo "export LD_PRELOAD=\"\${LD_PRELOAD+\${LD_PRELOAD} }${1}\""
 }
 
@@ -44,7 +44,7 @@ disable_preload() {
 
 	unset LD_PRELOAD
 	while [ ${#} -gt 0 ]; do
-		endswith autoupnp.so ${1} \
+		endswith libautoupnp.so ${1} \
 				|| LD_PRELOAD=${LD_PRELOAD+${LD_PRELOAD} }${1}
 		shift
 	done
