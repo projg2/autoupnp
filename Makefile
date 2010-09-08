@@ -1,11 +1,24 @@
 LIBPREFIX = lib
 LIBSUFFIX = .so
 
+BIN = autoupnp
 LIB = $(LIBPREFIX)autoupnp$(LIBSUFFIX)
 DUMMYLIB = $(LIBPREFIX)dummy$(LIBSUFFIX)
 OBJS = autoupnp.o notify.o registry.o upnp.o
 
 WANT_LIBNOTIFY = true
+
+DESTDIR =
+PREFIX = /usr
+LIBDIRNAME = lib
+
+LIBDIR = $(PREFIX)/$(LIBDIRNAME)
+DUMMYLIBDIR = /$(LIBDIRNAME)
+BINDIR = $(PREFIX)/bin
+
+LIBPERMS = a+rx
+BINPERMS = a+rx
+SUIDPERMS = u+s,g+s
 
 LCFLAGS = -fPIC \
 	$$($(WANT_LIBNOTIFY) && pkg-config --cflags libnotify && printf '%s' '-DHAVE_LIBNOTIFY')
@@ -44,4 +57,19 @@ clean:
 tests:
 	+$(MAKE) -C tests all
 
-.PHONY: all clean dummy tests
+install: $(LIB)
+	mkdir -p $(DESTDIR)$(LIBDIR) $(DESTDIR)$(BINDIR)
+	cp $(LIB) $(DESTDIR)$(LIBDIR)/
+	chmod $(LIBPERMS) $(DESTDIR)$(LIBDIR)/$(LIB)
+	cp $(BIN) $(DESTDIR)$(BINDIR)/
+	chmod $(BINPERMS) $(DESTDIR)$(BINDIR)/$(BIN)
+
+install-suid: install
+	chmod $(SUIDPERMS) $(DESTDIR)$(LIBDIR)/$(LIB)
+
+install-dummy: install $(DUMMYLIB)
+	mkdir -p $(DESTDIR)$(DUMMYLIBDIR)
+	cp $(DUMMYLIB) $(DESTDIR)$(DUMMYLIBDIR)/$(LIB)
+	chmod $(LIBPERMS),$(SUIDPERMS) $(DESTDIR)$(DUMMYLIBDIR)/$(LIB)
+
+.PHONY: all clean dummy tests install install-suid install-dummy
