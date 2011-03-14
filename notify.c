@@ -61,8 +61,17 @@ void user_notify(enum notify_type type, const char* const format, ...) {
 	pthread_mutex_unlock(&notify_init_lock);
 
 	if (notify_is_initted()) {
+#ifndef NOTIFY_CHECK_VERSION /* macro did not exist before libnotify-0.5.2 */
+#	define NOTIFY_CHECK_VERSION(x,y,z) 0
+#endif
+
+#if NOTIFY_CHECK_VERSION(0,7,0)
+		NotifyNotification* n = notify_notification_new(
+				"AutoUPnP", buf, notify_icon);
+#else
 		NotifyNotification* n = notify_notification_new(
 				"AutoUPnP", buf, notify_icon, NULL);
+#endif
 
 		notify_notification_show(n, NULL);
 	}
