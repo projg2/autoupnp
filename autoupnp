@@ -62,7 +62,7 @@ if [ ${#} -gt 0 ]; then
 			disable_preload
 			;;
 		*)
-			enable_preload
+			eval "$(enable_preload)"
 			exec "${@}"
 	esac
 else
