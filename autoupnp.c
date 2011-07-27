@@ -3,7 +3,10 @@
  * Distributed under the terms of the 3-clause BSD license
  */
 
-#define _GNU_SOURCE
+#ifdef HAVE_CONFIG_H
+#	include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

@@ -4,6 +4,10 @@
  * Distributed under the terms of the 3-clause BSD license
  */
 
+#ifdef HAVE_CONFIG_H
+#	include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <unistd.h>
 
