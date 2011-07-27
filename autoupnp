@@ -1,6 +1,6 @@
 #!/bin/sh
 # AutoUPnP LD_PRELOAD setup helper
-# (c) 2010 Michał Górny
+# (c) 2011 Michał Górny
 # Released under the terms of the 3-clause BSD license
 
 print_help() {
@@ -15,10 +15,6 @@ eval "\$(autoupnp on)"
 	to export AutoUPnP LD_PRELOAD to the currently running shell.
 eval "\$(autoupnp off)"
 	to remove AutoUPnP from LD_PRELOAD in the currently running shell.
-autoupnp install
-	to add the '. autoupnp on' call to your ~/.bash_profile, ~/.profile...
-autoupnp uninstall
-	to remove the '. autoupnp on' from your ~/.bash_profile, ~/.profile...
 _EOF_
 }
 
@@ -33,10 +29,8 @@ enable_preload() {
 		shift
 	done
 
-	# Replace the libname with the full path if installing system-wide
-	# with no intent of using setuid.
 	set -- libautoupnp.so
-	echo "export LD_PRELOAD=\"\${LD_PRELOAD+\${LD_PRELOAD} }${1}\""
+	printf 'export LD_PRELOAD="${LD_PRELOAD+${LD_PRELOAD} }%s"\n' "${1}"
 }
 
 disable_preload() {
@@ -56,58 +50,6 @@ disable_preload() {
 	fi
 }
 
-install_preload() {
-	if [ ${#} -gt 0 ]; then
-		while [ ${#} -gt 0 ]; do
-			if grep 'eval.*autoupnp on' "${1}" >/dev/null; then
-				echo "Already installed in ${1}." >&2
-			else
-				echo "Installing in ${1}." >&2
-				echo 'eval "$(autoupnp on)"' >> "${1}"
-			fi
-			shift
-		done
-	else
-		set -- ~/.bash_profile bash ~/.zprofile zsh ~/.profile sh
-
-		while [ ${#} -gt 0 ]; do
-			if [ -f "${1}" ]; then
-				if [ ${2} = sh -o ! -f ~/.profile ] || ! grep '\(\.\|source\) ~/.profile' "${1}" >/dev/null; then
-					install_preload "${1}"
-				fi
-			elif [ -x /bin/${2} ]; then
-				echo "NOTICE: if you'd like to have AutoUPnP enabled for ${2} shell, please:" >&2
-				echo "$ touch ${1}" >&2
-				if [ ${2} = sh -a \( -f ~/.bash_profile -o -f ~/.zprofile \) ]; then
-					echo >&2
-					echo 'You might also like to source that file within other shell startup files:' >&2
-					echo '	. ~/.profile' >&2
-					echo 'within your ~/.bash_profile and/or ~/.zprofile.' >&2
-				fi
-			fi
-
-			shift
-			shift
-		done
-	fi
-}
-
-uninstall_preload() {
-	[ ${#} -eq 0 ] && set -- ~/.bash_profile ~/.zprofile ~/.profile
-
-	while [ ${#} -gt 0 ]; do
-		if [ -f "${1}" ]; then
-			if grep 'eval.*autoupnp on[^a-z]*$' "${1}" >/dev/null; then
-				echo "Removing from ${1}." >&2
-				# risky -- removes the whole line
-				sed -i -e '/eval.*autoupnp on[^a-z]*$/d' "${1}"
-			fi
-		fi
-
-		shift
-	done
-}
-
 if [ ${#} -gt 0 ]; then
 	case "${1}" in
 		-h|-?|--help)
@@ -118,14 +60,6 @@ if [ ${#} -gt 0 ]; then
 			;;
 		off)
 			disable_preload
-			;;
-		install)
-			shift
-			install_preload "${@}"
-			;;
-		uninstall)
-			shift
-			uninstall_preload "${@}"
 			;;
 		*)
 			enable_preload
