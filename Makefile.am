@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libautoupnp.la
-bin_SCRIPTS = autoupnp
+dist_bin_SCRIPTS = autoupnp
 
 libautoupnp_la_SOURCES = src/autoupnp.c src/notify.c src/notify.h \
 	src/registry.c src/registry.h src/upnp.c src/upnp.h
