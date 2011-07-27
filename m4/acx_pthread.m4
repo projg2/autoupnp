@@ -79,6 +79,7 @@ case "${host_cpu}-${host_os}" in
 esac
 
 if test x"$acx_pthread_ok" = xno; then
+acx_save_pthread_ok=no
 for flag in $acx_pthread_flags; do
 
         tryPTHREAD_CFLAGS=""
@@ -145,6 +146,7 @@ _ACEOF
                 # tests for building binaries, not shared libraries.
                 PTHREAD_LIBS=" $tryPTHREAD_LIBS $PTHREAD_LIBS"
                 PTHREAD_CFLAGS="$PTHREAD_CFLAGS $tryPTHREAD_CFLAGS"
+                acx_save_pthread_ok=yes
             else   acx_pthread_ok=no
             fi
         fi
@@ -154,6 +156,7 @@ _ACEOF
 
         AC_MSG_RESULT($acx_pthread_ok)
 done
+acx_pthread_ok=$acx_save_pthread_ok
 fi
 
 # Various other checks:
@@ -162,27 +165,6 @@ if test "x$acx_pthread_ok" = xyes; then
         LIBS="$PTHREAD_LIBS $LIBS"
         save_CFLAGS="$CFLAGS"
         CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-
-        # Detect AIX lossage: threads are created detached by default
-        # and the JOINABLE attribute has a nonstandard name (UNDETACHED).
-        AC_MSG_CHECKING([for joinable pthread attribute])
-        AC_TRY_LINK([#include <pthread.h>],
-                    [int attr=PTHREAD_CREATE_JOINABLE;],
-                    ok=PTHREAD_CREATE_JOINABLE, ok=unknown)
-        if test x"$ok" = xunknown; then
-                AC_TRY_LINK([#include <pthread.h>],
-                            [int attr=PTHREAD_CREATE_UNDETACHED;],
-                            ok=PTHREAD_CREATE_UNDETACHED, ok=unknown)
-        fi
-        if test x"$ok" != xPTHREAD_CREATE_JOINABLE; then
-                AC_DEFINE(PTHREAD_CREATE_JOINABLE, $ok,
-                          [Define to the necessary symbol if this constant
-                           uses a non-standard name on your system.])
-        fi
-        AC_MSG_RESULT(${ok})
-        if test x"$ok" = xunknown; then
-                AC_MSG_WARN([we do not know how to create joinable pthreads])
-        fi
 
         AC_MSG_CHECKING([if more special flags are required for pthreads])
         flag=no
@@ -202,7 +184,7 @@ if test "x$acx_pthread_ok" = xyes; then
 # use libpq, and that is ugly, so we don't do it.  Users can still
 # define their compiler as cc_r to do thread builds of everything.
         # More AIX lossage: must compile with cc_r
-        AC_CHECK_PROG(PTHREAD_CC, cc_r, cc_r, ${CC})
+        AC_CHECK_PROGS(PTHREAD_CC, xlc_r cc_r, ${CC})
 else
         PTHREAD_CC="$CC"
 fi
