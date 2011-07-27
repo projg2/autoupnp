@@ -19,6 +19,9 @@
 #ifdef UPNPCOMMAND_HTTP_ERROR
 #	define LIBMINIUPNPC_SO_5
 #endif
+#ifdef UPNPDISCOVER_SUCCESS /* miniupnpc-1.6 */
+#	define LIBMINIUPNPC_SO_8
+#endif
 
 #include "upnp.h"
 #include "notify.h"
@@ -45,7 +48,11 @@ static struct igd_data* setup_igd(void) {
 
 	pthread_mutex_lock(&igd_data_lock);
 	if (!igd_set_up) {
+#ifdef LIBMINIUPNPC_SO_8
+		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0, 0, NULL);
+#else
 		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0);
+#endif
 
 		if (UPNP_GetValidIGD(devlist, &(igd_data.urls), &(igd_data.data),
 					igd_data.lan_addr, sizeof(igd_data.lan_addr)))
@@ -117,7 +124,11 @@ static int upnpc_common(struct registered_socket_data* rs, const enum upnpc_comm
 #endif
 					rs->port, rs->port, igd_data->lan_addr,
 					"AutoUPNP-added port forwarding",
-					rs->protocol, NULL);
+					rs->protocol,
+#ifdef LIBMINIUPNPC_SO_8
+					NULL,
+#endif
+					NULL);
 		else if (mode == upnpc_remove)
 			ret = UPNP_DeletePortMapping(
 					igd_data->urls.controlURL,
