@@ -178,8 +178,8 @@ int enable_redirect(struct registered_socket_data* rs) {
 				igd_data->data.servicetype,
 #endif
 				extip) == UPNPCOMMAND_SUCCESS)
-			user_notify(notify_added, "%s:%s (%s) forwarded successfully to %s:%s.",
-					extip, rs->port, rs->protocol, igd_data->lan_addr, rs->port);
+			user_notify(notify_added, "<a href='%s:%s'>%s:%s</a> (%s) forwarded successfully to %s:%s.",
+					extip, rs->port, extip, rs->port, rs->protocol, igd_data->lan_addr, rs->port);
 		else
 			user_notify(notify_added, "Port %s (%s) forwarded successfully to %s:%s.",
 					rs->port, rs->protocol, igd_data->lan_addr, rs->port);
