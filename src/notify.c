@@ -13,7 +13,9 @@
 
 #include <syslog.h>
 
-#include <pthread.h>
+#ifdef HAVE_PTHREAD
+#	include <pthread.h>
+#endif
 
 #ifdef HAVE_LIBNOTIFY
 #	include <libnotify/notify.h>
@@ -32,7 +34,9 @@ void dispose_notify(void) {
 
 void user_notify(enum notify_type type, const char* const format, ...) {
 #ifdef HAVE_LIBNOTIFY
+#	ifdef HAVE_PTHREAD
 	pthread_mutex_t notify_init_lock = PTHREAD_MUTEX_INITIALIZER;
+#	endif
 #endif
 	va_list ap;
 	char buf[1024];
@@ -59,10 +63,14 @@ void user_notify(enum notify_type type, const char* const format, ...) {
 	}
 
 #ifdef HAVE_LIBNOTIFY
+#ifdef HAVE_PTHREAD
 	pthread_mutex_lock(&notify_init_lock);
+#endif
 	if (!notify_is_initted())
 		notify_init("autoupnp");
+#ifdef HAVE_PTHREAD
 	pthread_mutex_unlock(&notify_init_lock);
+#endif
 
 	if (notify_is_initted()) {
 #ifndef NOTIFY_CHECK_VERSION /* macro did not exist before libnotify-0.5.2 */

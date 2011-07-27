@@ -10,7 +10,9 @@
 
 #include <stdlib.h>
 
-#include <pthread.h>
+#ifdef HAVE_PTHREAD
+#	include <pthread.h>
+#endif
 
 #include <miniupnpc/miniupnpc.h>
 #include <miniupnpc/upnpcommands.h>
@@ -37,16 +39,22 @@ struct igd_data {
 };
 
 static int igd_set_up = 0;
+#ifdef HAVE_PTHREAD
 static pthread_mutex_t igd_data_lock;
+#endif
 
 static void unlock_igd(void) {
+#ifdef HAVE_PTHREAD
 	pthread_mutex_unlock(&igd_data_lock);
+#endif
 }
 
 static struct igd_data* setup_igd(void) {
 	static struct igd_data igd_data;
 
+#ifdef HAVE_PTHREAD
 	pthread_mutex_lock(&igd_data_lock);
+#endif
 	if (!igd_set_up) {
 #ifdef LIBMINIUPNPC_SO_8
 		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0, 0, NULL);
@@ -160,18 +168,22 @@ static int upnpc_common(struct registered_socket_data* rs, const enum upnpc_comm
 #pragma GCC visibility push(hidden)
 
 void init_igd(void) {
+#ifdef HAVE_PTHREAD
 	pthread_mutexattr_t mattr;
 
 	pthread_mutexattr_init(&mattr);
 	pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
 	pthread_mutex_init(&igd_data_lock, &mattr);
 	pthread_mutexattr_destroy(&mattr);
+#endif
 }
 
 void dispose_igd(void) {
 	if (igd_set_up)
 		dispose_igd_data();
+#ifdef HAVE_PTHREAD
 	pthread_mutex_destroy(&igd_data_lock);
+#endif
 }
 
 int enable_redirect(struct registered_socket_data* rs) {
