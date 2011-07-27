@@ -7,6 +7,7 @@ AM_INIT_AUTOMAKE([1.6 foreign dist-bzip2 no-dependencies -Wall])
 AC_PROG_CC
 AC_USE_SYSTEM_EXTENSIONS
 LT_INIT([disable-static])
+ACX_PTHREAD
 
 AC_SEARCH_LIBS([dlopen], [dl],, [
 	AC_MSG_ERROR([dlopen() not found])
