@@ -18,26 +18,14 @@
 #endif
 
 #ifdef HAVE_LIBNOTIFY
-#	include <libnotify/notify.h>
+#	include <tinynotify.h>
 #endif
 
 #include "notify.h"
 
 #pragma GCC visibility push(hidden)
 
-void dispose_notify(void) {
-#ifdef HAVE_LIBNOTIFY
-	if (notify_is_initted())
-		notify_uninit();
-#endif
-}
-
 void user_notify(enum notify_type type, const char* const format, ...) {
-#ifdef HAVE_LIBNOTIFY
-#	ifdef HAVE_PTHREAD
-	pthread_mutex_t notify_init_lock = PTHREAD_MUTEX_INITIALIZER;
-#	endif
-#endif
 	va_list ap;
 	char buf[1024];
 	int syslog_type;
@@ -63,29 +51,19 @@ void user_notify(enum notify_type type, const char* const format, ...) {
 	}
 
 #ifdef HAVE_LIBNOTIFY
-#ifdef HAVE_PTHREAD
-	pthread_mutex_lock(&notify_init_lock);
-#endif
-	if (!notify_is_initted())
-		notify_init("autoupnp");
-#ifdef HAVE_PTHREAD
-	pthread_mutex_unlock(&notify_init_lock);
-#endif
+	{
+		NotifySession s;
+		Notification n;
 
-	if (notify_is_initted()) {
-#ifndef NOTIFY_CHECK_VERSION /* macro did not exist before libnotify-0.5.2 */
-#	define NOTIFY_CHECK_VERSION(x,y,z) 0
-#endif
+		s = notify_session_new();
+		notify_session_set_app_name(s, "autoupnp");
 
-#if NOTIFY_CHECK_VERSION(0,7,0)
-		NotifyNotification* n = notify_notification_new(
-				"AutoUPnP", buf, notify_icon);
-#else
-		NotifyNotification* n = notify_notification_new(
-				"AutoUPnP", buf, notify_icon, NULL);
-#endif
+		n = notification_new("AutoUPnP", buf);
+		notification_set_icon(n, notify_icon);
+		notification_send(n, s);
 
-		notify_notification_show(n, NULL);
+		notification_free(n);
+		notify_session_free(s);
 	}
 #endif
 

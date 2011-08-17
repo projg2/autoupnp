@@ -21,10 +21,10 @@ AC_ARG_WITH([libnotify],
 	[AS_HELP_STRING([--without-libnotify],
 		[Disable use of libnotify])])
 AS_IF([test x"$with_libnotify" != x"no"],
-	[PKG_CHECK_MODULES([LIBNOTIFY], [libnotify], [
-		AC_DEFINE([HAVE_LIBNOTIFY], [1], [define if you have libnotify])
+	[PKG_CHECK_MODULES([LIBNOTIFY], [libtinynotify], [
+		AC_DEFINE([HAVE_LIBNOTIFY], [1], [define if you have libtinynotify])
 	], [
-		AC_MSG_WARN([libnotify not found, disabling.])
+		AC_MSG_WARN([libtinynotify not found, disabling.])
 		with_libnotify=no
 ])])
 

@@ -63,7 +63,6 @@ static void exit_handler(void) {
 	}
 
 	dispose_igd();
-	dispose_notify();
 	dispose_registry();
 #ifdef HAVE_PTHREAD
 	pthread_mutex_unlock(&exit_lock);
