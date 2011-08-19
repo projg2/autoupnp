@@ -56,7 +56,7 @@ void user_notify(enum notify_type type, const char* const format, ...) {
 		Notification n;
 
 		s = notify_session_new("autoupnp", NOTIFY_SESSION_NO_APP_ICON);
-		n = notification_new("AutoUPnP", buf);
+		n = notification_new_unformatted("AutoUPnP", buf);
 		notification_set_app_icon(n, notify_icon);
 		notification_send(n, s);
 
