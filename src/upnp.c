@@ -46,7 +46,7 @@ static struct igd_data* setup_igd(void) {
 	pthread_mutex_lock(&igd_data_lock);
 	if (!igd_set_up) {
 #if MINIUPNPC_API_VERSION >= 14
-		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0, 0, 2, NULL);
+		struct UPNPDev* devlist = upnpDiscover(discovery_delay, getenv("AUTOUPNP_IF"), NULL, 0, 0, 2, NULL);
 #elif MINIUPNPC_API_VERSION >= 8
 		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0, 0, NULL);
 #else

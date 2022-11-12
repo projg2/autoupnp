@@ -15,6 +15,10 @@ eval "\$(autoupnp on)"
 	to export AutoUPnP LD_PRELOAD to the currently running shell.
 eval "\$(autoupnp off)"
 	to remove AutoUPnP from LD_PRELOAD in the currently running shell.
+
+If the AUTOUPNP_IF environment var is specified, that named interface will
+be used for discovering UPnP devices which will subsequently be used for
+forwarding.
 _EOF_
 }
 
