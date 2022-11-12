@@ -1,11 +1,7 @@
 /* autoupnp -- automatic UPnP open port forwarder
- * (c) 2010 Michał Górny
+ * (c) 2010-2022 Michał Górny
  * Distributed under the terms of the 3-clause BSD license
  */
-
-#ifdef HAVE_CONFIG_H
-#	include "config.h"
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
