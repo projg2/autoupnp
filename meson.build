@@ -1,6 +1,6 @@
 project('autoupnp', 'c',
   license : 'BSD-3-Clause',
-  version : '0.4.7')
+  version : '0.5.0')
 
 libminiupnp = dependency('miniupnpc')
 libnotify = dependency('libtinynotify', required : get_option('libnotify'))
