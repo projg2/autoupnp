@@ -1,18 +1,14 @@
 #ifndef AUTOUPNP_REGISTRY_H
 #define AUTOUPNP_REGISTRY_H
 
-#ifdef HAVE_PTHREAD
-#	include <pthread.h>
-#endif
+#include <pthread.h>
 #include <netinet/in.h>
 
 struct registered_socket_data {
 	const char* protocol;
 	char port[6];
 	short int state;
-#ifdef HAVE_PTHREAD
 	pthread_mutex_t lock;
-#endif
 };
 
 void init_registry(void);

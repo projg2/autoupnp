@@ -14,9 +14,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 
-#ifdef HAVE_PTHREAD
-#	include <pthread.h>
-#endif
+#include <pthread.h>
 
 #include "notify.h"
 #include "registry.h"
@@ -47,11 +45,9 @@ static void xchg_errno(void) {
 
 static void exit_handler(void) {
 	struct registered_socket_data* i;
-#ifdef HAVE_PTHREAD
 	static pthread_mutex_t exit_lock = PTHREAD_MUTEX_INITIALIZER;
 
 	pthread_mutex_lock(&exit_lock);
-#endif
 	while ((i = registry_yield())) {
 		if (i->state == RS_WORKING)
 			disable_redirect(i);
@@ -60,9 +56,7 @@ static void exit_handler(void) {
 
 	dispose_igd();
 	dispose_registry();
-#ifdef HAVE_PTHREAD
 	pthread_mutex_unlock(&exit_lock);
-#endif
 }
 
 static void init_handler(void) {
@@ -74,11 +68,9 @@ static void init_handler(void) {
 static void* const get_func(const enum replaced_func rf) {
 	static void* libc_handle = NULL;
 	static void* funcs[rf_last];
-#ifdef HAVE_PTHREAD
 	static pthread_mutex_t get_func_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 	pthread_mutex_lock(&get_func_mutex);
-#endif
 	if (!libc_handle) {
 		const char* const replaced_func_names[rf_last] =
 			{ "socket", "bind", "listen", "close" };
@@ -115,9 +107,7 @@ static void* const get_func(const enum replaced_func rf) {
 		init_handler();
 		xchg_errno();
 	}
-#ifdef HAVE_PTHREAD
 	pthread_mutex_unlock(&get_func_mutex);
-#endif
 
 	return funcs[rf];
 }

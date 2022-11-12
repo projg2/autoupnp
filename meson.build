@@ -6,8 +6,6 @@ libminiupnp = dependency('miniupnpc')
 libnotify = dependency('libtinynotify', required : get_option('libnotify'))
 pthread = dependency('threads')
 
-# assume pthread unconditionally these days
-add_global_arguments('-DHAVE_PTHREAD=1', language : 'c')
 if libnotify.found()
   add_global_arguments('-DHAVE_LIBNOTIFY=1', language : 'c')
 endif

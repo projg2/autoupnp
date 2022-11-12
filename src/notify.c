@@ -9,9 +9,7 @@
 
 #include <syslog.h>
 
-#ifdef HAVE_PTHREAD
-#	include <pthread.h>
-#endif
+#include <pthread.h>
 
 #ifdef HAVE_LIBNOTIFY
 #	include <tinynotify.h>
