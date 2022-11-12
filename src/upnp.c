@@ -12,14 +12,6 @@
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
 
-#ifndef MINIUPNPC_API_VERSION
-#	ifdef UPNPCOMMAND_HTTP_ERROR
-#		define MINIUPNPC_API_VERSION 5
-#	else
-#		define MINIUPNPC_API_VERSION -1
-#	endif
-#endif
-
 #include "upnp.h"
 #include "notify.h"
 
@@ -45,13 +37,8 @@ static struct igd_data* setup_igd(void) {
 
 	pthread_mutex_lock(&igd_data_lock);
 	if (!igd_set_up) {
-#if MINIUPNPC_API_VERSION >= 14
-		struct UPNPDev* devlist = upnpDiscover(discovery_delay, getenv("AUTOUPNP_IF"), NULL, 0, 0, 2, NULL);
-#elif MINIUPNPC_API_VERSION >= 8
-		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0, 0, NULL);
-#else
-		struct UPNPDev* devlist = upnpDiscover(discovery_delay, NULL, NULL, 0);
-#endif
+		struct UPNPDev* devlist = upnpDiscover(discovery_delay,
+				getenv("AUTOUPNP_IF"), NULL, 0, 0, 2, NULL);
 
 		if (UPNP_GetValidIGD(devlist, &(igd_data.urls), &(igd_data.data),
 					igd_data.lan_addr, sizeof(igd_data.lan_addr)))
@@ -82,10 +69,8 @@ static const char* const mystrupnperror(const int err) {
 		switch (err) {
 			case UPNPCOMMAND_INVALID_ARGS:
 				return "invalid arguments";
-#if MINIUPNPC_API_VERSION >= 5
 			case UPNPCOMMAND_HTTP_ERROR:
 				return "HTTP/socket error";
-#endif
 			case UPNPCOMMAND_UNKNOWN_ERROR:
 				return "unknown library error";
 			default:
@@ -103,9 +88,7 @@ enum upnpc_common_mode {
 static int upnpc_common(struct registered_socket_data* rs, const enum upnpc_common_mode mode,
 		const struct igd_data** dataptr) {
 	const struct igd_data* igd_data = setup_igd();
-#if MINIUPNPC_API_VERSION >= 5
 	static int retrying = 0;
-#endif
 
 	if (dataptr)
 		*dataptr = igd_data;
@@ -116,29 +99,18 @@ static int upnpc_common(struct registered_socket_data* rs, const enum upnpc_comm
 		if (mode == upnpc_add)
 			 ret = UPNP_AddPortMapping(
 					igd_data->urls.controlURL,
-#if MINIUPNPC_API_VERSION >= 5
 					igd_data->data.first.servicetype,
-#else
-					igd_data->data.servicetype,
-#endif
 					rs->port, rs->port, igd_data->lan_addr,
 					"AutoUPNP-added port forwarding",
 					rs->protocol,
-#if MINIUPNPC_API_VERSION >= 8
 					NULL,
-#endif
 					NULL);
 		else if (mode == upnpc_remove)
 			ret = UPNP_DeletePortMapping(
 					igd_data->urls.controlURL,
-#if MINIUPNPC_API_VERSION >= 5
 					igd_data->data.first.servicetype,
-#else
-					igd_data->data.servicetype,
-#endif
 					rs->port, rs->protocol, NULL);
 
-#if MINIUPNPC_API_VERSION >= 5 /* older versions return success instead... */
 		if (!retrying && ret == UPNPCOMMAND_HTTP_ERROR) {
 			/* HTTP request failed? Maybe our IGD definitions are out-of-date.
 			 * Let's get rid of them and retry. */
@@ -148,7 +120,6 @@ static int upnpc_common(struct registered_socket_data* rs, const enum upnpc_comm
 			ret = upnpc_common(rs, mode, dataptr);
 			retrying--;
 		}
-#endif
 
 		unlock_igd();
 		return ret;
@@ -182,11 +153,7 @@ int enable_redirect(struct registered_socket_data* rs) {
 
 		if (UPNP_GetExternalIPAddress(
 				igd_data->urls.controlURL,
-#if MINIUPNPC_API_VERSION >= 5
 				igd_data->data.first.servicetype,
-#else
-				igd_data->data.servicetype,
-#endif
 				extip) == UPNPCOMMAND_SUCCESS)
 			user_notify(notify_added, "<a href='%s:%s'>%s:%s</a> (%s) forwarded successfully to %s:%s.",
 					extip, rs->port, extip, rs->port, rs->protocol, igd_data->lan_addr, rs->port);
