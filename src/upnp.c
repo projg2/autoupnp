@@ -1,6 +1,6 @@
 /* autoupnp -- automatic UPnP open port forwarder
  *	miniupnpc interface
- * (c) 2010-2022 Michał Górny
+ * (c) 2010-2024 Michał Górny
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
@@ -40,9 +40,19 @@ static struct igd_data* setup_igd(void) {
 		struct UPNPDev* devlist = upnpDiscover(discovery_delay,
 				getenv("AUTOUPNP_IF"), NULL, 0, 0, 2, NULL);
 
-		if (UPNP_GetValidIGD(devlist, &(igd_data.urls), &(igd_data.data),
-					igd_data.lan_addr, sizeof(igd_data.lan_addr)))
+		int ret = UPNP_GetValidIGD(devlist, &(igd_data.urls), &(igd_data.data),
+				igd_data.lan_addr, sizeof(igd_data.lan_addr)
+#if MINIUPNPC_API_VERSION >= 18
+				, NULL, 0
+#endif
+				);
+
+		if (ret == 1)
 			igd_set_up = 1;
+#if MINIUPNPC_API_VERSION >= 18
+		else if (ret == 2)
+			igd_set_up = 1;
+#endif
 		else
 			user_notify(notify_error, "Unable to find an IGD on the network.");
 
